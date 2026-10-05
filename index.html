@@ -1,0 +1,2608 @@
+<!doctype html>
+<html lang="en" data-visualize-standalone>
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<meta name="referrer" content="no-referrer">
+<meta http-equiv="Content-Security-Policy" content="default-src 'none'; script-src 'unsafe-inline' 'unsafe-eval' 'wasm-unsafe-eval' blob: data: https://cdnjs.cloudflare.com https://cdn.jsdelivr.net https://esm.sh https://fonts.bunny.net https://fonts.googleapis.com https://fonts.gstatic.com https://unpkg.com; style-src 'unsafe-inline' blob: data: https://cdnjs.cloudflare.com https://cdn.jsdelivr.net https://esm.sh https://fonts.bunny.net https://fonts.googleapis.com https://fonts.gstatic.com https://unpkg.com; img-src blob: data: https://cdnjs.cloudflare.com https://cdn.jsdelivr.net https://esm.sh https://fonts.bunny.net https://fonts.googleapis.com https://fonts.gstatic.com https://unpkg.com; font-src blob: data: https://cdnjs.cloudflare.com https://cdn.jsdelivr.net https://esm.sh https://fonts.bunny.net https://fonts.googleapis.com https://fonts.gstatic.com https://unpkg.com; media-src blob: data: https://cdnjs.cloudflare.com https://cdn.jsdelivr.net https://esm.sh https://fonts.bunny.net https://fonts.googleapis.com https://fonts.gstatic.com https://unpkg.com; worker-src blob:; connect-src blob: data:; frame-src 'self'; object-src 'none'; base-uri 'none'; form-action 'none'">
+<title>插值与密度估算：三维交互演示</title>
+<style>:root{color-scheme:light dark;background:light-dark(rgb(255 255 255), rgb(24 24 24))}html,body{margin:0}body{box-sizing:border-box;padding:1rem;background:inherit}iframe{display:block;width:100%;height:calc(100vh - 2rem);margin:0 auto;border:0}</style>
+</head>
+<body>
+<iframe id="codex-visualization" sandbox="allow-scripts" referrerpolicy="no-referrer" title="插值与密度估算：三维交互演示" data-srcdoc="&lt;!doctype html&gt;
+&lt;html lang=&quot;en&quot; data-visualize-standalone&gt;
+&lt;head&gt;
+&lt;meta charset=&quot;utf-8&quot;&gt;
+&lt;meta name=&quot;viewport&quot; content=&quot;width=device-width, initial-scale=1&quot;&gt;
+&lt;meta name=&quot;referrer&quot; content=&quot;no-referrer&quot;&gt;
+&lt;meta http-equiv=&quot;Content-Security-Policy&quot; content=&quot;default-src &#x27;none&#x27;; script-src &#x27;unsafe-inline&#x27; &#x27;unsafe-eval&#x27; &#x27;wasm-unsafe-eval&#x27; blob: data: https://cdnjs.cloudflare.com https://cdn.jsdelivr.net https://esm.sh https://fonts.bunny.net https://fonts.googleapis.com https://fonts.gstatic.com https://unpkg.com; style-src &#x27;unsafe-inline&#x27; blob: data: https://cdnjs.cloudflare.com https://cdn.jsdelivr.net https://esm.sh https://fonts.bunny.net https://fonts.googleapis.com https://fonts.gstatic.com https://unpkg.com; img-src blob: data: https://cdnjs.cloudflare.com https://cdn.jsdelivr.net https://esm.sh https://fonts.bunny.net https://fonts.googleapis.com https://fonts.gstatic.com https://unpkg.com; font-src blob: data: https://cdnjs.cloudflare.com https://cdn.jsdelivr.net https://esm.sh https://fonts.bunny.net https://fonts.googleapis.com https://fonts.gstatic.com https://unpkg.com; media-src blob: data: https://cdnjs.cloudflare.com https://cdn.jsdelivr.net https://esm.sh https://fonts.bunny.net https://fonts.googleapis.com https://fonts.gstatic.com https://unpkg.com; worker-src blob:; connect-src blob: data:; frame-src &#x27;none&#x27;; object-src &#x27;none&#x27;; base-uri &#x27;none&#x27;; form-action &#x27;none&#x27;&quot;&gt;
+&lt;title&gt;插值与密度估算：三维交互演示&lt;/title&gt;
+&lt;style&gt;:root {
+  color-scheme: light dark;
+  background-color: var(
+    --background,
+    var(--color-background-primary, light-dark(rgb(255 255 255), rgb(24 24 24)))
+  ) !important;
+
+  /* Agent-facing contract; keep in sync with SKILL.md. */
+  --background: var(
+    --color-background-primary,
+    light-dark(rgb(255 255 255), rgb(24 24 24))
+  );
+  --foreground: var(
+    --color-text-primary,
+    light-dark(rgb(26 28 31), rgb(255 255 255))
+  );
+  --card: color-mix(in oklab, var(--foreground) 5%, var(--background));
+  --card-foreground: var(
+    --color-text-primary,
+    light-dark(rgb(26 28 31), rgb(255 255 255))
+  );
+  --popover: var(
+    --color-background-secondary,
+    light-dark(rgb(255 255 255), rgb(45 45 45))
+  );
+  --popover-foreground: var(
+    --color-text-primary,
+    light-dark(rgb(26 28 31), rgb(255 255 255))
+  );
+  --primary: var(
+    --color-text-info,
+    light-dark(rgb(51 156 255), rgb(131 195 255))
+  );
+  --primary-foreground: var(
+    --color-text-inverse,
+    light-dark(rgb(255 255 255), rgb(13 13 13))
+  );
+  --secondary: var(
+    --color-background-secondary,
+    light-dark(rgb(255 255 255 / 96%), rgb(54 54 54 / 96%))
+  );
+  --secondary-foreground: var(
+    --color-text-primary,
+    light-dark(rgb(26 28 31), rgb(255 255 255))
+  );
+  --muted: color-mix(in srgb, var(--foreground) 10%, transparent);
+  --muted-foreground: var(
+    --color-text-secondary,
+    light-dark(rgb(26 28 31 / 49.4%), rgb(255 255 255 / 49.8%))
+  );
+  --accent: var(
+    --color-background-info,
+    light-dark(rgb(229 242 255), rgb(13 39 63))
+  );
+  --accent-foreground: var(
+    --color-text-info,
+    light-dark(rgb(51 156 255), rgb(131 195 255))
+  );
+  --destructive: var(
+    --color-text-warning,
+    light-dark(rgb(226 85 7), rgb(255 133 73))
+  );
+  --border: var(
+    --color-border-secondary,
+    light-dark(rgb(26 28 31 / 8%), rgb(255 255 255 / 8.2%))
+  );
+  --input: var(
+    --color-border-primary,
+    light-dark(
+      rgb(26 28 31 / 11.8%),
+      color-mix(in oklab, rgb(0 0 0) 10%, transparent)
+    )
+  );
+  --ring: var(
+    --color-ring-primary,
+    light-dark(rgb(51 156 255), rgb(131 195 255 / 76%))
+  );
+  --font-size-base: var(--font-text-md-size, 14px);
+  --blue: light-dark(rgb(51 156 255), rgb(51 156 255));
+  --orange: light-dark(rgb(226 85 7), rgb(251 106 34));
+  --green: light-dark(rgb(0 162 64), rgb(64 201 119));
+  --red: light-dark(rgb(224 46 42), rgb(255 103 100));
+  --purple: light-dark(rgb(146 79 247), rgb(173 123 249));
+  --yellow: light-dark(rgb(255 195 0), rgb(255 210 64));
+  --viz-series-1: var(--primary);
+  --viz-series-2: light-dark(rgb(243 136 59), rgb(245 154 86));
+  --viz-series-3: light-dark(rgb(93 201 119), rgb(116 213 139));
+  --viz-series-4: light-dark(rgb(235 119 177), rgb(240 143 192));
+  --viz-series-5: light-dark(rgb(155 121 236), rgb(170 145 239));
+  --viz-series-6: light-dark(rgb(58 185 177), rgb(90 203 194));
+
+  /* Internal implementation variables; not part of the agent contract. */
+  --font-sans: -apple-system, system-ui, &quot;Segoe UI&quot;, sans-serif;
+  --font-mono:
+    ui-monospace, SFMono-Regular, &quot;SF Mono&quot;, Menlo, Consolas, &quot;Liberation Mono&quot;,
+    monospace;
+  --font-size-normal: max(11px, var(--font-size-base));
+  --font-size-tooltip: calc(var(--font-size-base) - 1px);
+  --font-size-small: max(11px, calc(var(--font-size-base) - 2px));
+  --font-size-h1: calc(var(--font-size-normal) * 1.7142857143);
+  --font-size-h2: calc(var(--font-size-normal) * 1.4285714286);
+  --font-size-h3: calc(var(--font-size-normal) * 1.2857142857);
+  --font-weight-normal: 430;
+  --font-weight-medium: 500;
+  --icon-size: 16px;
+  --line-height-normal: calc(var(--font-size-normal) * 1.5);
+  --line-height-tooltip: calc(var(--font-size-tooltip) * 1.4285714286);
+  --line-height-small: calc(var(--font-size-small) + 4px);
+  --corner-shape: round;
+  --radius: var(--border-radius-lg, 10px);
+  --radius-sm: calc(var(--radius) * 0.6);
+  --radius-md: calc(var(--radius) * 0.8);
+  --radius-lg: var(--radius);
+  --radius-2xl: calc(var(--radius) * 1.6);
+  --radius-full: 9999px;
+  --shadow-sm: 0 1px 2px -1px rgb(0 0 0 / 8%);
+  --checkmark-image: url(&quot;data:image/svg+xml,%3Csvg xmlns=&#x27;http://www.w3.org/2000/svg&#x27; viewBox=&#x27;0 0 17 17&#x27;%3E%3Cpath d=&#x27;M12.8961 3.64101C13.1297 3.41418 13.4984 3.37523 13.7779 3.56581C14.0571 3.75635 14.1554 4.11331 14.0299 4.41347L13.9615 4.53847L7.71151 13.7045C7.59411 13.8767 7.4063 13.9877 7.19881 14.0072C6.99136 14.0267 6.78564 13.9533 6.63826 13.806L2.88826 10.056L2.79842 9.9457C2.6192 9.67407 2.64927 9.30496 2.88826 9.06581C3.12738 8.82669 3.49647 8.79676 3.76815 8.97597L3.8785 9.06581L7.03084 12.2182L12.8053 3.74941L12.8961 3.64101Z&#x27;/%3E%3C/svg%3E&quot;);
+
+  /* Legacy aliases; not part of the current agent contract. */
+  --viz-bg: transparent;
+  --viz-panel: var(--card);
+  --viz-border: var(--border);
+  --viz-text: var(--foreground);
+  --viz-muted: var(--muted-foreground);
+  --viz-accent: var(--primary);
+  --viz-accent-text: var(--primary-foreground);
+  --viz-accent-bg: var(--accent);
+  --viz-font-size: var(--font-size-base);
+  --viz-warning: var(--destructive);
+}
+
+:root[data-theme=&quot;light&quot;] {
+  color-scheme: light;
+}
+
+:root[data-theme=&quot;dark&quot;] {
+  color-scheme: dark;
+}
+
+* {
+  box-sizing: border-box;
+}
+
+html &gt; body {
+  /* Preserve MCP aliases for older inline renderers without creating :root cycles. */
+  --color-background-primary: var(
+    --background,
+    light-dark(rgb(255 255 255), rgb(24 24 24))
+  );
+  --color-text-primary: var(
+    --foreground,
+    light-dark(rgb(26 28 31), rgb(255 255 255))
+  );
+  --color-border-secondary: var(
+    --border,
+    light-dark(rgb(26 28 31 / 8%), rgb(255 255 255 / 8.2%))
+  );
+
+  margin: 0;
+  padding: var(--visualize-paint-gutter, 0px);
+  color: var(--foreground);
+  background: transparent !important;
+  font-family: var(--font-sans) !important;
+  font-size: var(--font-size-normal);
+  font-weight: var(--font-weight-normal);
+  line-height: var(--line-height-normal);
+}
+
+.cursor-interaction {
+  cursor: var(--cursor-interaction, pointer);
+}
+
+a {
+  color: color-mix(in srgb, var(--viz-accent) 80%, var(--viz-text) 20%);
+  cursor: var(--cursor-interaction, pointer);
+  font-weight: var(--font-weight-medium, 500);
+  text-decoration: none;
+  text-underline-offset: 2px;
+}
+
+a:is(:hover, :focus-visible) {
+  text-decoration-line: underline;
+  text-decoration-style: dashed;
+  text-decoration-thickness: 0.5px;
+}
+
+h1,
+h2,
+h3,
+h4,
+h5,
+h6,
+p {
+  margin-block: 0;
+}
+
+h1 {
+  font-size: var(--font-size-h1);
+  font-weight: var(--font-weight-medium);
+  line-height: 1.25;
+}
+
+h2 {
+  font-size: var(--font-size-h2);
+  font-weight: var(--font-weight-medium);
+  line-height: 1.25;
+}
+
+h3,
+h4,
+h5,
+h6 {
+  font-size: var(--font-size-h3);
+  font-weight: var(--font-weight-medium);
+  line-height: 1.3;
+}
+
+b,
+strong,
+th {
+  font-weight: var(--font-weight-medium);
+}
+
+code:not(pre code) {
+  display: inline;
+  padding: 1px 6px;
+  border-radius: var(--radius-sm);
+  corner-shape: var(--corner-shape);
+  background: var(--muted);
+  font-family: var(--font-mono);
+  font-size: 0.92em;
+  overflow-wrap: anywhere;
+  -webkit-box-decoration-break: clone;
+  box-decoration-break: clone;
+  word-break: break-word;
+}
+
+.table-responsive {
+  width: 100%;
+  overflow-x: auto;
+  scrollbar-width: thin;
+}
+
+.table {
+  width: 100%;
+  border-collapse: collapse;
+  color: var(--foreground);
+  font: inherit;
+  text-align: start;
+}
+
+.table :is(th, td) {
+  padding-block: 10px;
+  padding-inline: 0 24px;
+  overflow-wrap: anywhere;
+  border-bottom: 1px solid var(--border);
+  text-align: start;
+  vertical-align: top;
+}
+
+.table-responsive &gt; .table :is(th, td) {
+  overflow-wrap: break-word;
+}
+
+.table :is(th, td):last-child {
+  padding-inline-end: 0;
+}
+
+.table :is(caption, thead th) {
+  font-weight: 600;
+}
+
+.table thead th {
+  padding-block: 8px;
+  border-bottom-color: color-mix(in srgb, var(--foreground) 16%, transparent);
+}
+
+.table tbody tr:last-child :is(th, td) {
+  border-bottom: 0;
+}
+
+.table.table-sm :is(th, td) {
+  padding-block: 6px;
+}
+
+.table.table-sm :is(th, td):not(:last-child) {
+  padding-inline-end: 16px;
+}
+
+.table :is(.text-end, [align=&quot;right&quot;]) {
+  text-align: end;
+  font-variant-numeric: tabular-nums;
+}
+
+.table :is(.text-center, [align=&quot;center&quot;]) {
+  text-align: center;
+}
+
+.table .text-nowrap {
+  white-space: nowrap;
+}
+
+#widget {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+  width: 100%;
+  padding: 0;
+  background: transparent !important;
+}
+
+.card {
+  min-width: 0;
+  padding: 12px;
+  overflow: hidden;
+  overflow-wrap: break-word;
+  border-radius: var(--radius-2xl);
+  corner-shape: var(--corner-shape);
+  color: var(--card-foreground);
+  background: var(--card);
+}
+
+.widget {
+  min-width: 0;
+  overflow: hidden;
+  border: 0;
+  border-radius: var(--radius-lg);
+  corner-shape: var(--corner-shape);
+  box-shadow: 0 0 0 0.5px var(--border-strong, var(--border));
+  color: var(--foreground);
+  background: var(--background);
+}
+
+#widget &gt; :not(.card, .widget, .progress) {
+  width: 100% !important;
+  max-width: none !important;
+  margin: 0 !important;
+  padding: 0 !important;
+  border: 0 !important;
+  border-radius: 0 !important;
+  background: transparent !important;
+  box-shadow: none !important;
+}
+
+.tooltip {
+  position: fixed;
+  z-index: 50;
+  top: 0;
+  left: 0;
+  width: max-content;
+  max-width: min(
+    20rem,
+    var(--tooltip-available-width, calc(100vw - 10px)),
+    calc(100vw - 10px)
+  );
+  max-height: min(
+    var(--tooltip-available-height, calc(100vh - 10px)),
+    calc(100vh - 10px)
+  );
+  padding: 4px 8px;
+  border: 1px solid var(--border);
+  border-radius: var(--radius-lg);
+  corner-shape: var(--corner-shape);
+  color: var(--popover-foreground);
+  background: var(--popover);
+  box-shadow: none;
+  font-size: var(--font-size-tooltip);
+  line-height: var(--line-height-tooltip);
+  overflow-wrap: break-word;
+  white-space: normal;
+  pointer-events: none;
+  user-select: none;
+}
+
+.viz-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(max(180px, 24%), 1fr));
+  gap: 10px;
+}
+
+.viz-stat {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+}
+
+.viz-stat-value {
+  font-size: var(--font-size-h2);
+  font-weight: var(--font-weight-medium);
+  line-height: 1.25;
+}
+
+.viz-row {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 10px;
+}
+
+hr {
+  width: 100%;
+  height: 1px;
+  margin-block: 6px;
+  border: 0;
+  background: var(--border);
+}
+
+.nav {
+  display: flex;
+  min-width: 0;
+  align-items: center;
+  gap: 4px;
+}
+
+.progress {
+  display: flex;
+  height: 8px;
+  margin-block: calc((var(--line-height-normal, 1.5em) - 8px) / 2);
+  overflow: hidden;
+  border: 0;
+  border-radius: var(--radius-full);
+  background: var(--muted);
+}
+
+.progress-bar:only-child {
+  border-radius: var(--radius-full);
+}
+
+.progress-bar {
+  height: 100%;
+  flex-shrink: 0;
+  border: 0;
+  background: var(--viz-series-1);
+}
+
+.viz-badge {
+  padding: 3px 8px;
+  border-radius: var(--radius-full);
+  color: var(--accent-foreground);
+  background: var(--accent);
+  font-weight: var(--font-weight-medium);
+}
+
+small,
+.text-small,
+.viz-badge {
+  font-size: var(--font-size-small);
+  line-height: var(--line-height-small);
+}
+
+.text-muted {
+  color: var(--muted-foreground);
+}
+
+.tabular-nums {
+  font-variant-numeric: tabular-nums;
+}
+
+.sr-only {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  padding: 0;
+  overflow: hidden;
+  clip: rect(0, 0, 0, 0);
+  white-space: nowrap;
+  border: 0;
+}
+
+.viz-controls {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 8px;
+}
+
+.viz-controls &gt; .form-label {
+  display: grid;
+  min-width: min(100%, 260px);
+  flex: 1 1 280px;
+  grid-template-columns: minmax(0, 1fr) auto;
+  align-items: baseline;
+  gap: 2px 12px;
+  margin-bottom: 0;
+}
+
+.viz-controls &gt; .form-label &gt; :is(.form-control, .form-range, .form-select) {
+  grid-column: 1 / -1;
+}
+
+.btn,
+.nav-link,
+.form-check-input,
+.form-control,
+.form-range,
+.form-select {
+  font: inherit;
+}
+
+.btn,
+.nav-link {
+  appearance: button;
+  display: inline-flex;
+  inline-size: fit-content;
+  max-inline-size: 100%;
+  min-height: 28px;
+  align-items: center;
+  justify-content: center;
+  gap: 4px;
+  margin: 0;
+  padding: 0 8px;
+  -webkit-app-region: no-drag;
+  border: 1px solid var(--input);
+  border-radius: var(--radius-lg);
+  corner-shape: var(--corner-shape);
+  color: var(--secondary-foreground);
+  background: var(--secondary);
+  cursor: var(--cursor-interaction, pointer);
+  text-align: center;
+  text-decoration: none;
+  white-space: nowrap;
+  user-select: none;
+  -webkit-font-smoothing: antialiased;
+}
+
+.btn:is(.btn-block, .viz-tile) {
+  inline-size: 100%;
+}
+
+.btn.viz-tile {
+  min-width: 0;
+  overflow-wrap: anywhere;
+  white-space: normal;
+}
+
+a.btn {
+  cursor: var(--cursor-interaction, pointer);
+  text-decoration: none;
+}
+
+.btn:not(:disabled):hover,
+.nav-link:not(:disabled):not([aria-disabled=&quot;true&quot;]):hover {
+  background: color-mix(in srgb, var(--foreground) 6%, var(--secondary));
+}
+
+.btn-primary {
+  border-color: transparent;
+  color: var(--primary-foreground);
+  background: var(--foreground);
+  background-clip: padding-box;
+}
+
+.btn-primary .text-muted {
+  color: color-mix(in srgb, var(--primary-foreground) 50%, transparent);
+}
+
+.btn-primary:not(:disabled):hover {
+  background: color-mix(in srgb, var(--foreground) 80%, transparent);
+  background-clip: padding-box;
+}
+
+.btn-ghost {
+  border-color: transparent;
+  color: var(--muted-foreground);
+  background: transparent;
+}
+
+.btn-ghost:not(:disabled):hover {
+  color: var(--foreground);
+  background: color-mix(in srgb, var(--foreground) 6%, var(--secondary));
+}
+
+.nav-pills .nav-link {
+  min-width: 0;
+  border-color: transparent;
+  color: var(--muted-foreground);
+  background: transparent;
+}
+
+.nav-justified .nav-link {
+  flex: 1 1 0;
+  overflow-wrap: anywhere;
+  white-space: normal;
+}
+
+.nav-pills .nav-link.active {
+  color: var(--foreground);
+  background: var(--muted);
+}
+
+/* Shared preview chrome; product styles stay inside each variant. */
+.viz-dotted-background {
+  background-image: radial-gradient(
+    circle,
+    color-mix(in srgb, var(--foreground) 14%, transparent) 0.8px,
+    transparent 0.8px
+  );
+  background-position: center;
+  background-size: 16px 16px;
+}
+
+.viz-carousel {
+  position: relative;
+  min-width: 0;
+}
+
+.viz-carousel:has(&gt; .viz-carousel-controls) {
+  min-height: calc(60px + var(--viz-carousel-picker-height, 0px));
+  padding-bottom: 60px;
+}
+
+.viz-carousel &gt; [data-variant][hidden] {
+  display: none !important;
+}
+
+.viz-carousel &gt; [data-variant] {
+  isolation: isolate;
+}
+
+.viz-carousel-controls {
+  --viz-carousel-hover: light-dark(
+    color-mix(in srgb, var(--foreground) 5.4%, transparent),
+    color-mix(in srgb, var(--foreground) 7.8%, transparent)
+  );
+  position: absolute;
+  z-index: 2;
+  bottom: 8px;
+  left: 50%;
+  display: flex;
+  width: max-content;
+  /* Leave room for the host&#x27;s design-controls launcher at the trailing edge. */
+  max-width: calc(100% - 96px);
+  align-items: center;
+  gap: 0;
+  padding: 0;
+  border: 1px solid var(--border);
+  border-radius: 16px;
+  color: var(--foreground);
+  background: var(--background);
+  font-family: var(--font-sans);
+  /* Match the settings dropdown chrome independently of the content font size. */
+  font-size: 13px;
+  font-weight: var(--font-weight-normal);
+  line-height: 18px;
+  transform: translateX(-50%);
+  user-select: none;
+}
+
+/* Keep authored mockup button styles out of the shared carousel chrome. */
+.viz-carousel-controls button,
+.viz-carousel-picker &gt; summary {
+  display: flex !important;
+  height: auto !important;
+  min-height: 30px;
+  align-items: center !important;
+  justify-content: center !important;
+  gap: 4px;
+  padding: 0 6px !important;
+  -webkit-app-region: no-drag;
+  border: 0 !important;
+  border-radius: 14px !important;
+  color: inherit !important;
+  background: transparent !important;
+  font: inherit !important;
+  -webkit-tap-highlight-color: transparent;
+}
+
+.viz-carousel-controls &gt; button,
+.viz-carousel-picker &gt; summary {
+  position: relative;
+  isolation: isolate;
+}
+
+.viz-carousel-controls &gt; button {
+  --icon-size: 16px;
+  width: 30px !important;
+  padding: 0 !important;
+}
+
+.viz-carousel-picker &gt; summary {
+  padding-inline: 12px !important;
+}
+
+.viz-carousel-controls .viz-carousel-caret {
+  width: 14px;
+  height: 14px;
+  flex: none;
+  margin: 0;
+  color: inherit;
+  transform: rotate(180deg);
+}
+
+.viz-carousel-controls &gt; button &gt; svg,
+.viz-carousel-controls .viz-carousel-caret,
+.viz-carousel-count {
+  opacity: 0.5;
+}
+
+.viz-carousel-controls &gt; button::before,
+.viz-carousel-picker &gt; summary::before {
+  position: absolute;
+  z-index: -1;
+  inset: 3px;
+  border-radius: 12px;
+  content: &quot;&quot;;
+  pointer-events: none;
+}
+
+.viz-carousel-controls &gt; button:hover::before,
+.viz-carousel-picker &gt; summary:hover::before {
+  background: var(--viz-carousel-hover);
+}
+
+.viz-carousel-controls &gt; button,
+.viz-carousel-controls [data-lucide],
+.viz-carousel-controls .lucide {
+  flex-shrink: 0;
+}
+
+.viz-carousel-picker {
+  min-width: 0;
+}
+
+.viz-carousel-picker &gt; summary {
+  min-width: 0;
+  list-style: none;
+}
+
+.viz-carousel-picker &gt; summary::-webkit-details-marker {
+  display: none;
+}
+
+.viz-carousel-count {
+  flex-shrink: 0;
+  white-space: nowrap;
+}
+
+.viz-carousel-name {
+  min-width: 0;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.viz-carousel-options {
+  position: absolute;
+  right: 0;
+  bottom: calc(100% + 4px);
+  left: 0;
+  display: flex;
+  max-height: 240px;
+  flex-direction: column;
+  gap: 2px;
+  overflow: auto;
+  padding: 4px;
+  border: 1px solid var(--border);
+  border-radius: var(--radius-lg);
+  background: var(--background);
+  box-shadow: 0 4px 12px light-dark(rgb(0 0 0 / 6%), rgb(0 0 0 / 25%));
+}
+
+.viz-carousel-options &gt; button {
+  border-radius: max(0px, calc(var(--radius-lg) - 5px)) !important;
+  width: 100% !important;
+  min-height: 28px;
+  justify-content: flex-start !important;
+  padding: 4px 8px !important;
+  font-size: var(--font-size-small) !important;
+  text-align: start;
+  white-space: normal;
+  overflow-wrap: anywhere;
+}
+
+.viz-carousel-options &gt; [aria-current=&quot;true&quot;],
+.viz-carousel-options &gt; button:hover {
+  background: var(--viz-carousel-hover) !important;
+}
+
+.btn:disabled,
+.nav-link:disabled,
+.nav-link[aria-disabled=&quot;true&quot;] {
+  cursor: not-allowed;
+  opacity: 0.4;
+}
+
+[data-lucide] {
+  stroke-width: 1.6;
+}
+
+.form-label {
+  display: block;
+  margin-bottom: 6px;
+  color: var(--foreground);
+}
+
+.form-control {
+  display: block;
+  width: 100%;
+  min-height: 28px;
+  padding: 0 8px;
+  outline: none;
+  border: 1px solid var(--input);
+  border-radius: var(--radius-lg);
+  corner-shape: var(--corner-shape);
+  color: var(--foreground);
+  background: var(--secondary);
+}
+
+.form-control::placeholder {
+  color: var(--muted-foreground);
+}
+
+.form-control[type=&quot;file&quot;] {
+  padding: 0;
+  overflow: hidden;
+  cursor: var(--cursor-interaction, pointer);
+}
+
+.form-control[type=&quot;file&quot;]::file-selector-button {
+  min-height: 26px;
+  margin-right: 8px;
+  padding: 0 8px;
+  border: 0;
+  border-right: 1px solid var(--input);
+  color: var(--secondary-foreground);
+  background: var(--secondary);
+  cursor: inherit;
+  font: inherit;
+}
+
+.form-control[type=&quot;file&quot;]:not(:disabled):hover::file-selector-button {
+  background: color-mix(in srgb, var(--foreground) 6%, var(--secondary));
+}
+
+.form-control-color[type=&quot;color&quot;] {
+  width: 40px;
+  height: 28px;
+  padding: 3px;
+  cursor: var(--cursor-interaction, pointer);
+}
+
+.form-control-color[type=&quot;color&quot;]::-webkit-color-swatch-wrapper {
+  padding: 0;
+}
+
+.form-control-color[type=&quot;color&quot;]::-webkit-color-swatch {
+  border: 0;
+  border-radius: calc(var(--radius-lg) - 4px);
+  corner-shape: var(--corner-shape);
+}
+
+textarea.form-control {
+  height: auto;
+  min-height: 72px;
+  padding: 8px 10px;
+  resize: vertical;
+}
+
+.form-control:focus-visible {
+  border-color: var(--ring);
+  box-shadow: inset 0 0 0 1px var(--ring);
+}
+
+.form-control:disabled,
+.form-select:disabled {
+  cursor: not-allowed;
+  opacity: 0.4;
+}
+
+.form-select {
+  appearance: none;
+  display: block;
+  width: 100%;
+  min-height: 28px;
+  margin: 0;
+  padding: 0 32px 0 8px;
+  outline: none;
+  border: 1px solid var(--input);
+  border-radius: var(--radius-lg);
+  corner-shape: var(--corner-shape);
+  color: var(--foreground);
+  background-color: var(--secondary);
+  background-image:
+    linear-gradient(45deg, transparent 50%, var(--muted-foreground) 50%),
+    linear-gradient(135deg, var(--muted-foreground) 50%, transparent 50%);
+  background-position:
+    calc(100% - 14px) 50%,
+    calc(100% - 10px) 50%;
+  background-repeat: no-repeat;
+  background-size: 4px 4px;
+  cursor: var(--cursor-interaction, default);
+}
+
+.form-select:not(:disabled):hover {
+  background-color: color-mix(in srgb, var(--foreground) 6%, var(--secondary));
+}
+
+.form-select:focus-visible {
+  border-color: var(--ring);
+  box-shadow: inset 0 0 0 1px var(--ring);
+}
+
+.form-check {
+  display: flex;
+  min-height: 20px;
+  align-items: center;
+  gap: 6px;
+}
+
+.form-check-input {
+  appearance: none;
+  width: 14px;
+  height: 14px;
+  flex: 0 0 auto;
+  margin: 0;
+  border: 1px solid var(--input);
+  color: var(--primary-foreground);
+  background-color: transparent;
+  cursor: var(--cursor-interaction, default);
+  transition:
+    background-color 150ms,
+    border-color 150ms,
+    box-shadow 150ms;
+}
+
+.form-check:not(.form-switch) .form-check-input[type=&quot;checkbox&quot;] {
+  border-color: var(--input);
+  border-radius: var(--radius-sm);
+  corner-shape: var(--corner-shape);
+  background-color: var(--secondary);
+  box-shadow: var(--shadow-sm);
+}
+
+.form-check:not(.form-switch)
+  .form-check-input:not(:disabled):not(:checked):hover {
+  background-color: var(--card);
+}
+
+.form-check:not(.form-switch) .form-check-input[type=&quot;checkbox&quot;]:checked {
+  border-color: var(--primary);
+  background-color: var(--primary);
+}
+
+.form-check:not(.form-switch)
+  .form-check-input[type=&quot;checkbox&quot;]:checked::before {
+  display: block;
+  width: 100%;
+  height: 100%;
+  background: var(--primary-foreground);
+  content: &quot;&quot;;
+  mask: var(--checkmark-image) center / 12px 12px no-repeat;
+}
+
+.form-check-input[type=&quot;radio&quot;] {
+  width: 14px;
+  height: 14px;
+  border-radius: var(--radius-full);
+}
+
+.form-check-input[type=&quot;radio&quot;]:checked {
+  border: 2px solid var(--primary);
+  background:
+    radial-gradient(circle, var(--primary-foreground) 0 2.5px, transparent 3px),
+    var(--primary);
+}
+
+.form-check:not(.form-switch) .form-check-input:focus-visible {
+  outline: 2px solid var(--ring);
+  outline-offset: 2px;
+}
+
+.form-check:not(.form-switch) .form-check-input:disabled {
+  cursor: not-allowed;
+  pointer-events: none;
+}
+
+.form-check:not(.form-switch) .form-check-input:disabled + .form-check-label {
+  cursor: not-allowed;
+}
+
+.form-switch .form-check-input:disabled,
+.form-switch .form-check-input:disabled + .form-check-label {
+  cursor: not-allowed;
+  opacity: 0.6;
+}
+
+.form-check-label {
+  color: var(--foreground);
+  cursor: var(--cursor-interaction, default);
+}
+
+.form-switch .form-check-input {
+  position: relative;
+  width: 32px;
+  height: 20px;
+  border: 0;
+  border-radius: var(--radius-full);
+  background: var(--muted);
+  box-shadow: none;
+  transition: background-color 200ms cubic-bezier(0, 0, 0.2, 1);
+}
+
+.form-switch .form-check-input::before {
+  position: absolute;
+  top: 50%;
+  left: 0;
+  width: 16px;
+  height: 16px;
+  box-sizing: border-box;
+  border: 1px solid light-dark(var(--primary-foreground), var(--foreground));
+  border-radius: var(--radius-full);
+  background: light-dark(var(--primary-foreground), var(--foreground));
+  box-shadow: var(--shadow-sm);
+  content: &quot;&quot;;
+  transform: translate(2px, -50%);
+  transition: transform 200ms cubic-bezier(0, 0, 0.2, 1);
+}
+
+.form-switch .form-check-input:checked {
+  background: var(--primary);
+}
+
+.form-switch .form-check-input:checked::before {
+  transform: translate(14px, -50%);
+}
+
+.form-switch .form-check-input:focus-visible {
+  box-shadow: 0 0 0 2px var(--ring);
+}
+
+.form-range {
+  appearance: none;
+  display: block;
+  width: 100%;
+  height: 28px;
+  flex: 1;
+  margin: 0;
+  padding: 0;
+  outline: none;
+  border: 0;
+  accent-color: var(--primary);
+  background: linear-gradient(
+      color-mix(in srgb, var(--foreground) 7%, transparent),
+      color-mix(in srgb, var(--foreground) 7%, transparent)
+    )
+    center / 100% 2px no-repeat;
+}
+
+.form-range::-webkit-slider-runnable-track {
+  height: 28px;
+  background: transparent;
+}
+
+.form-range::-webkit-slider-thumb {
+  appearance: none;
+  width: 20px;
+  height: 20px;
+  margin-top: 4px;
+  border: 1px solid var(--border);
+  border-radius: var(--radius-full);
+  background: light-dark(var(--primary-foreground), var(--foreground));
+}
+
+.form-range:focus-visible::-webkit-slider-thumb {
+  border-color: var(--ring);
+  box-shadow: inset 0 0 0 1px var(--ring);
+}
+
+.form-range::-moz-range-track {
+  height: 28px;
+  background: transparent;
+}
+
+.form-range::-moz-range-thumb {
+  width: 20px;
+  height: 20px;
+  border: 1px solid var(--border);
+  border-radius: var(--radius-full);
+  background: light-dark(var(--primary-foreground), var(--foreground));
+}
+
+.form-range:focus-visible::-moz-range-thumb {
+  border-color: var(--ring);
+  box-shadow: inset 0 0 0 1px var(--ring);
+}
+
+.form-range:disabled {
+  cursor: not-allowed;
+  opacity: 0.4;
+}
+
+.btn:not(.btn-primary, .viz-tile):is(
+  [aria-pressed=&quot;true&quot;],
+  [aria-selected=&quot;true&quot;],
+  .is-selected
+) {
+  border-color: var(--primary);
+  color: var(--primary-foreground);
+  background: var(--primary);
+}
+
+.btn.viz-tile:is([aria-pressed=&quot;true&quot;], [aria-selected=&quot;true&quot;], .is-selected) {
+  border-color: var(--primary);
+  box-shadow: inset 0 0 0 1px var(--primary);
+}
+
+.btn:focus-visible,
+.nav-link:focus-visible {
+  outline: 2px solid var(--ring);
+  outline-offset: 2px;
+}
+
+.viz-carousel-controls :is(button, summary):focus-visible {
+  outline: 2px solid var(--ring) !important;
+  outline-offset: 2px !important;
+}
+
+@media (pointer: coarse) {
+  .viz-carousel:has(&gt; .viz-carousel-controls) {
+    min-height: calc(76px + var(--viz-carousel-picker-height, 0px));
+    padding-bottom: 76px;
+  }
+
+  .btn,
+  .nav-link,
+  .viz-carousel-controls button,
+  .viz-carousel-picker &gt; summary,
+  .form-control,
+  .form-select {
+    min-width: 44px;
+    min-height: 44px;
+  }
+
+  /* Keep small-screen WebKit from zooming when a text field receives focus. */
+  .form-control,
+  .form-select {
+    font-size: max(16px, var(--font-size-normal));
+  }
+
+  .form-control[type=&quot;file&quot;]::file-selector-button {
+    min-width: 44px;
+    min-height: 44px;
+  }
+
+  .form-control-color[type=&quot;color&quot;] {
+    width: 44px;
+    height: 44px;
+  }
+
+  .form-control:is(
+    [type=&quot;date&quot;],
+    [type=&quot;datetime-local&quot;],
+    [type=&quot;month&quot;],
+    [type=&quot;time&quot;],
+    [type=&quot;week&quot;]
+  ) {
+    min-width: 0;
+    max-width: 100%;
+    padding-block: 8px;
+  }
+
+  .form-check {
+    min-height: 44px;
+    padding-inline: 15px;
+  }
+
+  .form-check-input {
+    position: relative;
+  }
+
+  .form-check-input::after {
+    position: absolute;
+    top: 50%;
+    left: 50%;
+    width: 44px;
+    height: 44px;
+    content: &quot;&quot;;
+    transform: translate(-50%, -50%);
+  }
+
+  .form-check-label {
+    display: inline-flex;
+    min-width: 44px;
+    min-height: 44px;
+    align-items: center;
+  }
+
+  .form-range {
+    height: 44px;
+    touch-action: pan-y;
+  }
+
+  .form-range::-webkit-slider-runnable-track {
+    height: 44px;
+  }
+
+  .form-range::-moz-range-track {
+    height: 44px;
+  }
+
+  .form-range::-webkit-slider-thumb {
+    margin-top: 12px;
+  }
+}
+
+svg {
+  display: block;
+  max-width: 100%;
+  height: auto;
+}
+
+#widget &gt; svg {
+  width: 100%;
+}
+
+/* Model-authored chart rules can otherwise stretch icons after these styles load. */
+svg.lucide {
+  display: block;
+  width: var(--icon-size) !important;
+  height: var(--icon-size) !important;
+  flex: none;
+  margin: 0 !important;
+  stroke-width: 1.6;
+}
+
+.text-warning,
+.text-destructive {
+  color: var(--destructive);
+}
+
+html&gt;body{padding:0}&lt;/style&gt;
+&lt;/head&gt;
+&lt;body&gt;
+&lt;script type=&quot;application/json&quot; id=&quot;codex-visualization-widget-state&quot;&gt;__CODEX_VISUALIZATION_WIDGET_STATE__&lt;/script&gt;
+&lt;script&gt;(() =&gt; {
+  const root = document.documentElement;
+  const mediaQuery = globalThis.matchMedia(&quot;(prefers-color-scheme: dark)&quot;);
+  const apply = Reflect.apply;
+  const isArray = Array.isArray;
+  const hasOwn = Object.hasOwn;
+  const parentWindow = globalThis.parent;
+  const stringify = JSON.stringify;
+  const parse = JSON.parse;
+  const encode = TextEncoder.prototype.encode.bind(new TextEncoder());
+  const initialStateElement = document.getElementById(
+    &quot;codex-visualization-widget-state&quot;,
+  );
+  const initialGlobals = parse(initialStateElement?.textContent ?? &quot;{}&quot;);
+  initialStateElement?.remove();
+  /** @type {Record&lt;string, unknown&gt; | null} */
+  let state = initialGlobals.widgetState ?? null;
+  const statePersistence = initialGlobals.statePersistence ?? &quot;none&quot;;
+  let nextStateRequestId = 0;
+  /** @type {Map&lt;number, { resolve: () =&gt; void; reject: (error: Error) =&gt; void; timeout: ReturnType&lt;typeof globalThis.setTimeout&gt;; serializedState: string }&gt;} */
+  const pendingStateWrites = new Map();
+  const persistenceError = () =&gt;
+    Object.assign(
+      new Error(&quot;The host could not persist the widget state update&quot;),
+      {
+        code: -32000,
+        data: { code: &quot;widget_state_persistence_failed&quot;, retryable: false },
+      },
+    );
+  /**
+   * @param {object} prototype
+   * @param {string} property
+   */
+  const getPrototypeGetter = (prototype, property) =&gt; {
+    // oxlint-disable-next-line typescript/unbound-method -- invoked through captured Reflect.apply
+    const getter = Object.getOwnPropertyDescriptor(prototype, property)?.get;
+    if (getter == null) {
+      throw new Error(`Missing ${property} getter`);
+    }
+    return getter;
+  };
+  const getMessageData = getPrototypeGetter(MessageEvent.prototype, &quot;data&quot;);
+  const getMessagePorts = getPrototypeGetter(MessageEvent.prototype, &quot;ports&quot;);
+  const getMessageSource = getPrototypeGetter(MessageEvent.prototype, &quot;source&quot;);
+  // oxlint-disable-next-line typescript/unbound-method -- captured before the untrusted fragment runs
+  const addHostMessageListener = MessagePort.prototype.addEventListener;
+  // oxlint-disable-next-line typescript/unbound-method -- captured before the untrusted fragment runs
+  const postHostMessage = MessagePort.prototype.postMessage;
+  // oxlint-disable-next-line typescript/unbound-method -- captured before the untrusted fragment runs
+  const startHostPort = MessagePort.prototype.start;
+  // oxlint-disable-next-line typescript/unbound-method -- captured before the untrusted fragment runs
+  const stopMessagePropagation = Event.prototype.stopImmediatePropagation;
+  /** @type {MessagePort | null} */
+  let hostPort = null;
+  const postToHost = (type, payload) =&gt; {
+    if (hostPort != null) {
+      apply(postHostMessage, hostPort, [{ type, ...payload }]);
+    }
+  };
+  const openExternal = ({ href }) =&gt; {
+    if (globalThis.navigator.userActivation?.isActive === true) {
+      postToHost(&quot;open-external&quot;, { href });
+    }
+  };
+  const sendFollowUpMessage = ({ context, prompt, title }) =&gt; {
+    if (globalThis.navigator.userActivation?.isActive === true) {
+      postToHost(&quot;follow-up&quot;, { context, prompt, title });
+    }
+    return Promise.resolve();
+  };
+  /**
+   * @param {Record&lt;string, unknown&gt; | ((previous: Record&lt;string, unknown&gt; | null) =&gt; Record&lt;string, unknown&gt;)} next
+   * @returns {Promise&lt;void&gt;}
+   */
+  const setWidgetState = async (next) =&gt; {
+    const nextState = typeof next === &quot;function&quot; ? next(state) : next;
+    if (
+      nextState == null ||
+      typeof nextState !== &quot;object&quot; ||
+      isArray(nextState)
+    ) {
+      throw new TypeError(&quot;Widget state must be a JSON object&quot;);
+    }
+    const inputState = stringify(
+      nextState,
+      (_key, /** @type {unknown} */ value) =&gt; {
+        if (
+          typeof value === &quot;undefined&quot; ||
+          typeof value === &quot;function&quot; ||
+          typeof value === &quot;symbol&quot; ||
+          (typeof value === &quot;number&quot; &amp;&amp; !Number.isFinite(value))
+        ) {
+          throw new TypeError(&quot;Widget state must be a JSON object&quot;);
+        }
+        return value;
+      },
+    );
+    const parsedState = parse(inputState);
+    if (
+      parsedState == null ||
+      typeof parsedState !== &quot;object&quot; ||
+      isArray(parsedState)
+    ) {
+      throw new TypeError(&quot;Widget state must be a JSON object&quot;);
+    }
+    const storedState = {
+      modelContent: null,
+      privateContent: null,
+      ...parsedState,
+    };
+    const serializedState = stringify(storedState);
+    if (encode(serializedState).length &gt; 16 * 1024) {
+      throw new TypeError(
+        &quot;Widget state must be a JSON object of at most 16 KiB&quot;,
+      );
+    }
+    if (
+      hasOwn(storedState, &quot;imageIds&quot;) &amp;&amp;
+      (!isArray(storedState.imageIds) ||
+        storedState.imageIds.some(
+          (/** @type {unknown} */ id) =&gt; typeof id !== &quot;string&quot;,
+        ))
+    ) {
+      throw new TypeError(&quot;Widget state imageIds must be an array of strings&quot;);
+    }
+    if (storedState.imageIds?.length &gt; 0) {
+      throw Object.assign(
+        new TypeError(&quot;Visualization state does not support image attachments&quot;),
+        { code: -32602, data: { code: &quot;images_unsupported&quot; } },
+      );
+    }
+    state = storedState;
+    globalThis.openai.widgetState = state;
+    globalThis.dispatchEvent(
+      new CustomEvent(&quot;openai:set_globals&quot;, {
+        detail: { globals: { widgetState: state } },
+      }),
+    );
+    if (statePersistence === &quot;none&quot;) {
+      throw persistenceError();
+    }
+    const id = ++nextStateRequestId;
+    return new Promise((resolve, reject) =&gt; {
+      const timeout = globalThis.setTimeout(() =&gt; {
+        pendingStateWrites.delete(id);
+        reject(persistenceError());
+      }, 30_000);
+      pendingStateWrites.set(id, { resolve, reject, timeout, serializedState });
+      postToHost(&quot;widget-state-write&quot;, { id, state: serializedState });
+    });
+  };
+  const syncTheme = () =&gt; {
+    const theme = mediaQuery.matches ? &quot;dark&quot; : &quot;light&quot;;
+    root.dataset.theme = theme;
+    globalThis.openai = {
+      ...globalThis.openai,
+      openExternal,
+      sendFollowUpMessage,
+      setWidgetState,
+      theme,
+      visualizationStyleVariables: {},
+      visualizationTheme: theme,
+      widgetState: state,
+      statePersistence,
+      stateModelContext: &quot;none&quot;,
+    };
+    globalThis.dispatchEvent(
+      new CustomEvent(&quot;openai:set_globals&quot;, {
+        detail: { globals: globalThis.openai },
+      }),
+    );
+  };
+  const sendHeight = () =&gt; {
+    postToHost(&quot;height&quot;, {
+      height: Math.ceil(
+        Math.max(
+          document.body.scrollHeight,
+          document.body.getBoundingClientRect().height,
+        ),
+      ),
+    });
+  };
+
+  globalThis.addEventListener(
+    &quot;message&quot;,
+    (event) =&gt; {
+      const data = apply(getMessageData, event, []);
+      const ports = apply(getMessagePorts, event, []);
+      const source = apply(getMessageSource, event, []);
+      if (
+        hostPort != null ||
+        source !== parentWindow ||
+        typeof data !== &quot;object&quot; ||
+        data?.type !== &quot;codex-visualization-initialize&quot; ||
+        !isArray(ports) ||
+        ports.length !== 1
+      ) {
+        return;
+      }
+      apply(stopMessagePropagation, event, []);
+      const nextHostPort = ports[0];
+      try {
+        apply(addHostMessageListener, nextHostPort, [
+          &quot;message&quot;,
+          (event) =&gt; {
+            const data = apply(getMessageData, event, []);
+            if (typeof data === &quot;object&quot; &amp;&amp; data?.type === &quot;measure&quot;) {
+              sendHeight();
+            } else if (
+              typeof data === &quot;object&quot; &amp;&amp;
+              data?.type === &quot;widget-state-result&quot;
+            ) {
+              /** @type {unknown} */
+              const id = data.id;
+              if (typeof id !== &quot;number&quot;) {
+                return;
+              }
+              const pending = pendingStateWrites.get(id);
+              if (pending != null) {
+                pendingStateWrites.delete(id);
+                globalThis.clearTimeout(pending.timeout);
+                if (data.ok === true) {
+                  pending.resolve();
+                } else {
+                  pending.reject(persistenceError());
+                }
+              }
+            }
+          },
+        ]);
+        apply(startHostPort, nextHostPort, []);
+      } catch {
+        return;
+      }
+      hostPort = nextHostPort;
+      for (const [id, { serializedState }] of pendingStateWrites) {
+        postToHost(&quot;widget-state-write&quot;, { id, state: serializedState });
+      }
+      sendHeight();
+    },
+    { capture: true },
+  );
+  document.currentScript?.remove();
+  mediaQuery.addEventListener(&quot;change&quot;, syncTheme);
+  globalThis.addEventListener(&quot;click&quot;, (event) =&gt; {
+    if (event.defaultPrevented) {
+      return;
+    }
+    let element = null;
+    if (event.target instanceof globalThis.Element) {
+      element = event.target;
+    } else if (event.target instanceof globalThis.Node) {
+      element = event.target.parentElement;
+    }
+    const link = element?.closest(&quot;a[href]&quot;);
+    const href = link?.getAttribute(&quot;href&quot;);
+    if (href == null) {
+      return;
+    }
+    if (href.startsWith(&quot;#&quot;)) {
+      let id;
+      try {
+        id = decodeURIComponent(href.slice(1));
+      } catch {
+        return;
+      }
+      const target = id.length === 0 ? root : document.getElementById(id);
+      if (
+        target == null ||
+        globalThis.navigator.userActivation?.isActive !== true
+      ) {
+        return;
+      }
+      event.preventDefault();
+      postToHost(&quot;scroll-to&quot;, {
+        top: target.getBoundingClientRect().top + globalThis.scrollY,
+      });
+      return;
+    }
+    event.preventDefault();
+    openExternal({ href });
+  });
+  new ResizeObserver(sendHeight).observe(document.body);
+  syncTheme();
+})();
+&lt;/script&gt;
+&lt;div id=&quot;gis-seven-demo&quot;&gt;
+  &lt;h3&gt;插值与密度估算：三维交互演示&lt;/h3&gt;
+  &lt;div class=&quot;viz-controls&quot;&gt;
+    &lt;label class=&quot;form-label&quot;&gt;演示内容
+      &lt;select class=&quot;form-select&quot; id=&quot;g7-mode&quot;&gt;
+        &lt;option value=&quot;interpolation&quot;&gt;① 空间插值：测量点 → 连续栅格&lt;/option&gt;
+        &lt;option value=&quot;scope&quot;&gt;② 分类：全局与局部&lt;/option&gt;
+        &lt;option value=&quot;trend&quot;&gt;③ 趋势面：斜平面与曲面&lt;/option&gt;
+        &lt;option value=&quot;spline&quot;&gt;④ 局部函数拟合：局部样条曲面&lt;/option&gt;
+        &lt;option value=&quot;idw&quot;&gt;⑤ 加权平均：反距离加权&lt;/option&gt;
+        &lt;option value=&quot;kriging&quot;&gt;⑤ 加权平均：普通克里金&lt;/option&gt;
+        &lt;option value=&quot;simple&quot;&gt;⑥ 简单密度：圆内平均分摊&lt;/option&gt;
+        &lt;option value=&quot;kernel&quot;&gt;⑥ 核密度：中心高、周围低&lt;/option&gt;
+      &lt;/select&gt;
+    &lt;/label&gt;
+    &lt;label class=&quot;form-label&quot; id=&quot;g7-variant-label&quot; hidden&gt;对比方式
+      &lt;select class=&quot;form-select&quot; id=&quot;g7-variant&quot;&gt;&lt;/select&gt;
+    &lt;/label&gt;
+  &lt;/div&gt;
+  &lt;div class=&quot;viz-row&quot;&gt;
+    &lt;button class=&quot;btn btn-primary&quot; id=&quot;g7-play&quot; type=&quot;button&quot;&gt;播放全过程&lt;/button&gt;
+    &lt;button class=&quot;btn&quot; id=&quot;g7-prev&quot; type=&quot;button&quot;&gt;上一步&lt;/button&gt;
+    &lt;button class=&quot;btn&quot; id=&quot;g7-next&quot; type=&quot;button&quot;&gt;下一步&lt;/button&gt;
+    &lt;span class=&quot;tabular-nums&quot; id=&quot;g7-count&quot;&gt;1 / 6&lt;/span&gt;
+    &lt;label class=&quot;form-label&quot;&gt;视图 &lt;select class=&quot;form-select&quot; id=&quot;g7-view&quot;&gt;&lt;option value=&quot;3d&quot;&gt;三维立体&lt;/option&gt;&lt;option value=&quot;flat&quot;&gt;二维俯视&lt;/option&gt;&lt;/select&gt;&lt;/label&gt;
+  &lt;/div&gt;
+  &lt;div class=&quot;viz-controls&quot; id=&quot;g7-orbit&quot;&gt;
+    &lt;label class=&quot;form-label&quot;&gt;水平旋转 &lt;span id=&quot;g7-yaw-value&quot; class=&quot;tabular-nums&quot;&gt;&lt;/span&gt;&lt;input class=&quot;form-range&quot; id=&quot;g7-yaw&quot; type=&quot;range&quot; min=&quot;-180&quot; max=&quot;180&quot; value=&quot;-40&quot; aria-label=&quot;水平旋转角度&quot;&gt;&lt;/label&gt;
+    &lt;label class=&quot;form-label&quot;&gt;观察高度 &lt;span id=&quot;g7-tilt-value&quot; class=&quot;tabular-nums&quot;&gt;&lt;/span&gt;&lt;input class=&quot;form-range&quot; id=&quot;g7-tilt&quot; type=&quot;range&quot; min=&quot;15&quot; max=&quot;80&quot; value=&quot;34&quot; aria-label=&quot;三维视角俯角&quot;&gt;&lt;/label&gt;
+  &lt;/div&gt;
+  &lt;div id=&quot;g7-frame&quot;&gt;&lt;canvas id=&quot;g7-canvas&quot; role=&quot;img&quot; aria-label=&quot;空间数据估计过程的教学示意图&quot;&gt;&lt;/canvas&gt;&lt;/div&gt;
+  &lt;div class=&quot;viz-row text-small&quot; id=&quot;g7-legend&quot;&gt;&lt;/div&gt;
+  &lt;div id=&quot;g7-stage&quot; aria-live=&quot;polite&quot;&gt;&lt;/div&gt;
+  &lt;div class=&quot;tabular-nums text-small&quot; id=&quot;g7-density-detail&quot; hidden&gt;&lt;/div&gt;
+  &lt;div class=&quot;table-responsive&quot; id=&quot;g7-weight-wrap&quot; hidden&gt;
+    &lt;table class=&quot;table table-sm tabular-nums&quot;&gt;&lt;thead&gt;&lt;tr&gt;&lt;th&gt;测量点&lt;/th&gt;&lt;th&gt;已知数值&lt;/th&gt;&lt;th&gt;到P距离（m）&lt;/th&gt;&lt;th&gt;权重&lt;/th&gt;&lt;th&gt;加权贡献&lt;/th&gt;&lt;/tr&gt;&lt;/thead&gt;&lt;tbody id=&quot;g7-weights&quot;&gt;&lt;/tbody&gt;&lt;/table&gt;
+  &lt;/div&gt;
+  &lt;div class=&quot;text-small text-muted&quot; id=&quot;g7-model&quot;&gt;&lt;/div&gt;
+  &lt;div class=&quot;text-small text-muted&quot;&gt;依据：知识点汇总第13—14页；点位与数值均为教学示例。&lt;/div&gt;
+&lt;/div&gt;
+&lt;style&gt;
+#gis-seven-demo {display:grid;gap:12px;color:var(--foreground)}
+#gis-seven-demo #g7-frame {width:100%;min-width:0}
+#gis-seven-demo canvas {display:block;width:100%;height:420px;touch-action:pan-y}
+#gis-seven-demo canvas[data-view=&quot;3d&quot;] {touch-action:none;cursor:grab}
+#gis-seven-demo canvas.is-dragging {cursor:grabbing}
+#gis-seven-demo [hidden] {display:none!important}
+#gis-seven-demo .swatch {display:inline-block;width:12px;height:12px;margin-right:5px;background:var(--viz-series-1)}
+#gis-seven-demo .swatch.neutral {background:var(--muted-foreground)}
+#gis-seven-demo .swatch.target {background:var(--viz-series-2)}
+&lt;/style&gt;
+&lt;script&gt;
+(() =&gt; {
+  const root=document.getElementById(&#x27;gis-seven-demo&#x27;);
+  const el=id=&gt;root.querySelector(&#x27;#g7-&#x27;+id), canvas=el(&#x27;canvas&#x27;), ctx=canvas.getContext(&#x27;2d&#x27;);
+  const pts=[]; let n=0;
+  for(const y of [.16,.5,.84]) for(const x of [.14,.5,.86]) {
+    const noise=[-2,1,-1,2,0,-2,1,-1,2][n];
+    pts.push({id:String.fromCharCode(65+n++),x,y,z:Math.round(18+20*x+12*y+14*Math.sin(Math.PI*x)*Math.sin(Math.PI*y)+noise)});
+  }
+  const events=[{id:&#x27;甲&#x27;,x:.35,y:.46,z:60},{id:&#x27;乙&#x27;,x:.53,y:.51,z:40},{id:&#x27;丙&#x27;,x:.66,y:.34,z:80}];
+  const target={x:.59,y:.45};
+  const sx=[.04,.18,.32,.46,.60,.74,.90], sy=[20,27,24,39,33,43,46];
+  const NX=30,NY=18,cellArea=(20/NX)*(12/NY), radius=.25;
+  let mode=&#x27;interpolation&#x27;,variant=&#x27;global&#x27;,step=0,from=0,progress=1,playing=false,timer=null,raf=null,width=700;
+  let view=&#x27;3d&#x27;,yaw=-40,tilt=34,drag=null;
+  const saved=window.openai?.widgetState?.modelContent;
+  const valid=[&#x27;interpolation&#x27;,&#x27;scope&#x27;,&#x27;trend&#x27;,&#x27;spline&#x27;,&#x27;idw&#x27;,&#x27;kriging&#x27;,&#x27;simple&#x27;,&#x27;kernel&#x27;];
+  if(saved&amp;&amp;valid.includes(saved.mode)){mode=saved.mode;variant=saved.variant||&#x27;global&#x27;;step=Math.max(0,Math.min(5,Number(saved.step)||0));from=step;}
+  if(saved?.view===&#x27;flat&#x27;)view=&#x27;flat&#x27;;
+  const cameraState=window.openai?.widgetState?.privateContent;
+  if(Number.isFinite(cameraState?.yaw))yaw=Math.max(-180,Math.min(180,cameraState.yaw));
+  if(Number.isFinite(cameraState?.tilt))tilt=Math.max(15,Math.min(80,cameraState.tilt));
+  const stages={
+    interpolation:[&#x27;输入：已知点的位置与测量值&#x27;,&#x27;确定待估计位置P&#x27;,&#x27;选择参与估计的测量点&#x27;,&#x27;计算P的估计值&#x27;,&#x27;继续计算其他栅格位置&#x27;,&#x27;输出：整个区域的栅格数值分布&#x27;],
+    scope:[&#x27;输入：整个区域的测量点&#x27;,&#x27;确定待插值点P&#x27;,&#x27;选点范围：全部区域 / P附近&#x27;,&#x27;突出真正参与计算的点&#x27;,&#x27;全局看整体；局部看附近&#x27;,&#x27;分类依据：使用已知测量点的范围&#x27;],
+    trend:[&#x27;输入：全部已知测量点&#x27;,&#x27;利用全部数据拟合趋势面&#x27;,&#x27;一次：斜平面；高次：复杂曲面&#x27;,&#x27;在趋势面上读取P的估计值&#x27;,&#x27;把函数用于更多位置&#x27;,&#x27;输出：表达整体变化的趋势面&#x27;],
+    spline:[&#x27;输入：测量点的位置与数值&#x27;,&#x27;确定待插值点P&#x27;,&#x27;选择P周围的局部测量点&#x27;,&#x27;拟合局部样条曲面&#x27;,&#x27;把P的坐标代入局部函数&#x27;,&#x27;读取P的估计值&#x27;],
+    idw:[&#x27;输入：已知测量值&#x27;,&#x27;确定待插值点P&#x27;,&#x27;选择附近测量点，比较距离&#x27;,&#x27;距离越近，所占权重越大&#x27;,&#x27;对已知数值进行加权平均&#x27;,&#x27;逐格估计：测量点附近可形成局部峰谷&#x27;],
+    kriging:[&#x27;输入：已知测量值&#x27;,&#x27;确定待插值点P&#x27;,&#x27;选取附近点，描述空间相关关系&#x27;,&#x27;在无偏与最小误差方差条件下求权重&#x27;,&#x27;按求出的权重进行加权平均&#x27;,&#x27;输出：当前模型下的估计值及栅格分布&#x27;],
+    simple:[&#x27;输入：观测点与统计数量&#x27;,&#x27;以每个点为中心确定半径&#x27;,&#x27;甲点：圆内各格平均分摊&#x27;,&#x27;叠加乙点：重叠处贡献相加&#x27;,&#x27;叠加丙点：汇总各格得到的数量&#x27;,&#x27;各格总量除以面积 → 密度&#x27;],
+    kernel:[&#x27;输入：观测点与统计数量&#x27;,&#x27;每点放核函数，指定半径&#x27;,&#x27;甲点：中心贡献高，向外降低&#x27;,&#x27;叠加乙点：重叠处贡献相加&#x27;,&#x27;叠加丙点：汇总各格得到的数量&#x27;,&#x27;各格总量除以面积 → 核密度分布&#x27;]
+  };
+  function save(){window.openai?.setWidgetState?.({modelContent:{chapter:&#x27;第七章：空间数据—插值与估算&#x27;,mode,variant,view,step,stage:stages[mode][step],example:&#x27;教学示例&#x27;},privateContent:{yaw,tilt}}).catch(()=&gt;{});}
+  function distance(a,b){return Math.hypot((a.x-b.x)*20,(a.y-b.y)*12);}
+  function near(p){return [...pts].sort((a,b)=&gt;distance(a,p)-distance(b,p)).slice(0,5);}
+  function solve(A,b){A=A.map((r,i)=&gt;[...r,b[i]]);let N=b.length;for(let k=0;k&lt;N;k++){let j=k;for(let i=k+1;i&lt;N;i++)if(Math.abs(A[i][k])&gt;Math.abs(A[j][k]))j=i;[A[k],A[j]]=[A[j],A[k]];if(Math.abs(A[k][k])&lt;1e-10)throw Error(&#x27;Singular model&#x27;);let v=A[k][k];for(let q=k;q&lt;=N;q++)A[k][q]/=v;for(let i=0;i&lt;N;i++)if(i!==k){v=A[i][k];for(let q=k;q&lt;=N;q++)A[i][q]-=v*A[k][q];}}return A.map(r=&gt;r[N]);}
+  function basis(p,high){return high?[1,p.x,p.y,p.x*p.x,p.x*p.y,p.y*p.y]:[1,p.x,p.y];}
+  function trend(high){let rows=pts.map(p=&gt;basis(p,high)),N=rows[0].length;return solve(Array.from({length:N},(_,i)=&gt;Array.from({length:N},(_,j)=&gt;rows.reduce((s,r)=&gt;s+r[i]*r[j],0))),Array.from({length:N},(_,i)=&gt;rows.reduce((s,r,j)=&gt;s+r[i]*pts[j].z,0)));}
+  const linear=trend(false),quadratic=trend(true);
+  function trendValue(p){return basis(p,variant===&#x27;high&#x27;).reduce((s,v,i)=&gt;s+v*(variant===&#x27;high&#x27;?quadratic:linear)[i],0);}
+  function idw(p,list=near(p)){let exact=list.find(a=&gt;distance(a,p)&lt;1e-8);if(exact)return list.map(a=&gt;a===exact?1:0);let a=list.map(a=&gt;1/distance(a,p));let s=a.reduce((a,b)=&gt;a+b,0);return a.map(v=&gt;v/s);}
+  function kriging(p,list=near(p)){
+    const cov=(a,b)=&gt;Math.exp(-distance(a,b)/5),N=list.length;
+    const A=Array.from({length:N+1},(_,i)=&gt;Array.from({length:N+1},(_,j)=&gt;i===N?(j===N?0:1):j===N?1:cov(list[i],list[j])));
+    return solve(A,[...list.map(a=&gt;cov(a,p)),1]).slice(0,N);
+  }
+  function estimate(p,kind){let list=near(p),w=kind===&#x27;kriging&#x27;?kriging(p,list):idw(p,list);return w.reduce((s,a,i)=&gt;s+a*list[i].z,0);}
+  const density={};
+  for(const kind of [&#x27;simple&#x27;,&#x27;kernel&#x27;]) density[kind]=events.map(p=&gt;{
+    let arr=Array.from({length:NX*NY},(_,i)=&gt;{let x=(i%NX+.5)/NX,y=(Math.floor(i/NX)+.5)/NY,d=Math.hypot(x-p.x,(y-p.y)*.6);return d&gt;radius?0:kind===&#x27;simple&#x27;?1:(1-(d/radius)**2)**2;});
+    let sum=arr.reduce((a,b)=&gt;a+b,0);return arr.map(v=&gt;v/sum*p.z);
+  });
+  function spline(xs,ys){const N=xs.length,h=xs.slice(1).map((v,i)=&gt;v-xs[i]),A=Array.from({length:N},()=&gt;Array(N).fill(0)),b=Array(N).fill(0);A[0][0]=1;A[N-1][N-1]=1;for(let i=1;i&lt;N-1;i++){A[i][i-1]=h[i-1];A[i][i]=2*(h[i-1]+h[i]);A[i][i+1]=h[i];b[i]=6*((ys[i+1]-ys[i])/h[i]-(ys[i]-ys[i-1])/h[i-1]);}let M=solve(A,b);return x=&gt;{let i=0;while(i&lt;N-2&amp;&amp;x&gt;xs[i+1])i++;let a=(xs[i+1]-x)/h[i],bb=(x-xs[i])/h[i];return a*ys[i]+bb*ys[i+1]+((a**3-a)*M[i]+(bb**3-bb)*M[i+1])*h[i]**2/6;};}
+  const splineFn=spline(sx.slice(1,6),sy.slice(1,6));
+  const splinePositions=[.1,.3,.5,.7,.9],localKnots=[.3,.5,.7];
+  const sampleValue=(x,y)=&gt;18+20*x+12*y+14*Math.sin(Math.PI*x)*Math.sin(Math.PI*y)+3*Math.sin(3*Math.PI*x)*Math.sin(2*Math.PI*y);
+  const splinePoints=splinePositions.flatMap((y,j)=&gt;splinePositions.map((x,i)=&gt;({x,y,z:sampleValue(x,y),id:String.fromCharCode(65+j*5+i),local:i&gt;=1&amp;&amp;i&lt;=3&amp;&amp;j&gt;=1&amp;&amp;j&lt;=3})));
+  const splineRows=localKnots.map(y=&gt;spline(localKnots,localKnots.map(x=&gt;sampleValue(x,y))));
+  function splineSurface(x,y){return spline(localKnots,splineRows.map(f=&gt;f(x)))(y);}
+  const meshCache=new Map();
+  function meshValues(kind){
+    const key=kind===&#x27;trend&#x27;?kind+&#x27;-&#x27;+variant:kind;
+    if(meshCache.has(key))return meshCache.get(key);
+    const values=Array.from({length:(NX+1)*(NY+1)},(_,i)=&gt;{
+      let x=(i%(NX+1))/NX,y=Math.floor(i/(NX+1))/NY;
+      return kind===&#x27;trend&#x27;?trendValue({x,y}):kind===&#x27;spline&#x27;?splineSurface(.3+.4*x,.3+.4*y):estimate({x,y},kind);
+    });meshCache.set(key,values);return values;
+  }
+  const probe=document.createElement(&#x27;span&#x27;);probe.hidden=true;root.appendChild(probe);let colors={};
+  function color(name){if(colors[name])return colors[name];probe.style.color=&#x27;var(&#x27;+name+&#x27;)&#x27;;return colors[name]=getComputedStyle(probe).color;}
+  function text(s,x,y,align=&#x27;left&#x27;){ctx.fillStyle=color(&#x27;--foreground&#x27;);ctx.textAlign=align;ctx.fillText(s,x,y);}
+  function line(x1,y1,x2,y2,col,alpha=1){ctx.save();ctx.globalAlpha=alpha;ctx.strokeStyle=color(col);ctx.lineWidth=1;ctx.beginPath();ctx.moveTo(x1,y1);ctx.lineTo(x2,y2);ctx.stroke();ctx.restore();}
+  function mark(p,x,y,label,active=true){ctx.fillStyle=color(active?&#x27;--viz-series-1&#x27;:&#x27;--muted-foreground&#x27;);ctx.beginPath();ctx.arc(x,y,5,0,Math.PI*2);ctx.fill();if(label)text(label,x+8,y-7);}
+  function mix(a,b){return a+(b-a)*progress;}
+  function stageAmount(values){return mix(values[from],values[step]);}
+  function draw(){if(view===&#x27;3d&#x27;)drawScene();else drawFlat();}
+  function drawFlat(){
+    canvas.style.height=&#x27;340px&#x27;;
+    colors={};const dpr=window.devicePixelRatio||1,H=340;canvas.width=Math.round(width*dpr);canvas.height=H*dpr;ctx.setTransform(dpr,0,0,dpr,0,0);ctx.clearRect(0,0,width,H);ctx.font=getComputedStyle(root).font;ctx.textBaseline=&#x27;middle&#x27;;
+    const L=40,T=34,W=width-60,B=264,px=x=&gt;L+x*W,py=y=&gt;T+(1-y)*B;
+    const isDensity=mode===&#x27;simple&#x27;||mode===&#x27;kernel&#x27;, valueKind=mode===&#x27;kriging&#x27;?&#x27;kriging&#x27;:&#x27;idw&#x27;;
+    const count=isDensity?Math.max(0,stageAmount([0,0,1,2,3,3])):mode===&#x27;scope&#x27;?0:stageAmount([0,0,0,1,NX*NY*.5,NX*NY]);
+    const field=Array.from({length:NX*NY},(_,i)=&gt;{
+      let p={x:(i%NX+.5)/NX,y:(Math.floor(i/NX)+.5)/NY};
+      return isDensity?density[mode].reduce((s,arr,j)=&gt;s+arr[i]*Math.max(0,Math.min(1,count-j)),0)/(step===5?cellArea:1):mode===&#x27;trend&#x27;?trendValue(p):mode===&#x27;spline&#x27;?splineSurface(p.x,p.y):estimate(p,valueKind);
+    });
+    const max=isDensity?Math.max(...density[mode][0].map((_,i)=&gt;density[mode].reduce((s,a)=&gt;s+a[i],0)),1)/(step===5?cellArea:1):62;
+    if(count&gt;0)for(let i=0;i&lt;field.length;i++){
+      const gx=i%NX,gy=Math.floor(i/NX);
+      if(mode===&#x27;spline&#x27;&amp;&amp;((gx+.5)/NX&lt;.3||(gx+.5)/NX&gt;.7||(gy+.5)/NY&lt;.3||(gy+.5)/NY&gt;.7))continue;
+      if(!isDensity&amp;&amp;count&lt;2&amp;&amp;!(gx===Math.floor(target.x*NX)&amp;&amp;gy===Math.floor(target.y*NY)))continue;
+      if(!isDensity&amp;&amp;count&gt;=2&amp;&amp;i&gt;=count)continue;
+      ctx.globalAlpha=isDensity?(field[i]&gt;0?.12+.76*field[i]/max:0):.10+.75*Math.max(0,Math.min(1,(field[i]-18)/44));
+      ctx.fillStyle=color(&#x27;--viz-series-1&#x27;);ctx.fillRect(px(gx/NX),py((gy+1)/NY),W/NX+.2,B/NY+.2);
+    }ctx.globalAlpha=1;
+    for(let i=0;i&lt;=NX;i++)line(px(i/NX),T,px(i/NX),T+B,&#x27;--border&#x27;,.45);
+    for(let j=0;j&lt;=NY;j++)line(L,py(j/NY),L+W,py(j/NY),&#x27;--border&#x27;,.45);
+    text(&#x27;示意区域：20 m × 12 m&#x27;,L,14);text(isDensity?(step===5?&#x27;颜色深：单位面积数量多&#x27;:&#x27;颜色深：分摊到该格的数量多&#x27;):&#x27;颜色深：估计数值高&#x27;,L,H-15);
+    if(isDensity){
+      events.forEach((p,j)=&gt;{if(step&gt;=1){ctx.save();ctx.beginPath();ctx.rect(L,T,W,B);ctx.clip();ctx.strokeStyle=color(&#x27;--muted-foreground&#x27;);ctx.beginPath();ctx.ellipse(px(p.x),py(p.y),radius*W,radius/.6*B,0,0,Math.PI*2);ctx.stroke();ctx.restore();}mark(p,px(p.x),py(p.y),p.id+&#x27; &#x27;+p.z,step&lt;2||j&lt;count);});
+      if(step&gt;=2){let gx=Math.floor(target.x*NX),gy=Math.floor(target.y*NY);ctx.strokeStyle=color(&#x27;--viz-series-2&#x27;);ctx.lineWidth=2;ctx.strokeRect(px(gx/NX),py((gy+1)/NY),W/NX,B/NY);text(&#x27;选定格&#x27;,px(target.x)-10,py(target.y)+20,&#x27;right&#x27;);}
+      return;
+    }
+    let local=mode===&#x27;spline&#x27;?splinePoints.filter(p=&gt;p.local):near(target),all=mode===&#x27;trend&#x27;||mode===&#x27;scope&#x27;&amp;&amp;variant===&#x27;global&#x27;;
+    if(mode===&#x27;kriging&#x27;&amp;&amp;step===2){for(let i=0;i&lt;local.length;i++)for(let j=i+1;j&lt;local.length;j++)line(px(local[i].x),py(local[i].y),px(local[j].x),py(local[j].y),&#x27;--viz-series-1&#x27;,Math.exp(-distance(local[i],local[j])/5)*.65);}
+    if(mode===&#x27;scope&#x27;&amp;&amp;variant===&#x27;local&#x27;&amp;&amp;step&gt;=2){ctx.strokeStyle=color(&#x27;--muted-foreground&#x27;);ctx.beginPath();let r=Math.max(...local.map(p=&gt;distance(p,target)))/20;ctx.ellipse(px(target.x),py(target.y),r*W,r/.6*B,0,0,Math.PI*2);ctx.stroke();}
+    (mode===&#x27;spline&#x27;?splinePoints:pts).forEach(p=&gt;{let selected=all||local.includes(p);if(step&gt;=2&amp;&amp;selected&amp;&amp;mode!==&#x27;spline&#x27;)line(px(p.x),py(p.y),px(target.x),py(target.y),&#x27;--viz-series-1&#x27;,.45);mark(p,px(p.x),py(p.y),mode===&#x27;spline&#x27;?(selected?p.id:&#x27;&#x27;):p.id+&#x27; &#x27;+p.z,step&lt;2||selected);});
+    if(step&gt;=1){const ready=mode===&#x27;spline&#x27;?step&gt;=4:step&gt;=3;ctx.strokeStyle=color(&#x27;--viz-series-2&#x27;);ctx.lineWidth=2;ctx.beginPath();ctx.arc(px(target.x),py(target.y),8,0,Math.PI*2);ctx.stroke();text(ready&amp;&amp;mode!==&#x27;scope&#x27;?&#x27;P ≈ &#x27;+(mode===&#x27;trend&#x27;?trendValue(target):mode===&#x27;spline&#x27;?splineSurface(target.x,target.y):estimate(target,valueKind)).toFixed(1):&#x27;P（待估计）&#x27;,px(target.x)+12,py(target.y)+18);}
+  }
+  function drawScene(){
+    canvas.style.height=&#x27;420px&#x27;;colors={};
+    const H=420,dpr=window.devicePixelRatio||1;canvas.width=Math.round(width*dpr);canvas.height=H*dpr;ctx.setTransform(dpr,0,0,dpr,0,0);ctx.clearRect(0,0,width,H);ctx.font=getComputedStyle(root).font;ctx.textBaseline=&#x27;middle&#x27;;
+    const isDensity=mode===&#x27;simple&#x27;||mode===&#x27;kernel&#x27;,kind=mode===&#x27;kriging&#x27;?&#x27;kriging&#x27;:mode===&#x27;trend&#x27;?&#x27;trend&#x27;:mode===&#x27;spline&#x27;?&#x27;spline&#x27;:&#x27;idw&#x27;;
+    const mesh=isDensity||mode===&#x27;scope&#x27;?null:meshValues(kind);
+    const allDensity=isDensity?density[mode][0].map((_,i)=&gt;density[mode].reduce((s,a)=&gt;s+a[i],0)/cellArea):null;
+    const zMax=isDensity?Math.max(1,Math.ceil(Math.max(...allDensity))):Math.ceil(Math.max(...(mode===&#x27;spline&#x27;?splinePoints:pts).map(p=&gt;p.z),...(mesh||[]))/10)*10;
+    const theta=tilt*Math.PI/180,phi=yaw*Math.PI/180,C=Math.cos(phi),S=Math.sin(phi),st=Math.sin(theta),ct=Math.cos(theta);
+    function camera(x,y,z){const X=(x-.5)*20,Y=(y-.5)*12,Z=z/zMax*6.6,rx=X*C-Y*S,ry=X*S+Y*C;return {u:rx,v:ry*st-Z*ct,depth:ry*ct+Z*st};}
+    const corners=[];for(const x of [0,1])for(const y of [0,1])for(const z of [0,zMax])corners.push(camera(x,y,z));
+    const loX=Math.min(...corners.map(p=&gt;p.u)),hiX=Math.max(...corners.map(p=&gt;p.u)),loY=Math.min(...corners.map(p=&gt;p.v)),hiY=Math.max(...corners.map(p=&gt;p.v));
+    const scale=Math.min((width-78)/(hiX-loX),(H-96)/(hiY-loY));
+    function project(x,y,z){const p=camera(x,y,z);return {x:width/2+(p.u-(loX+hiX)/2)*scale,y:50+(H-96)/2+(p.v-(loY+hiY)/2)*scale,depth:p.depth};}
+    function path(vertices){ctx.beginPath();vertices.forEach((p,i)=&gt;{const q=project(...p);i?ctx.lineTo(q.x,q.y):ctx.moveTo(q.x,q.y);});ctx.closePath();}
+    function seg(a,b,col=&#x27;--border&#x27;,alpha=1){const p=project(...a),q=project(...b);line(p.x,p.y,q.x,q.y,col,alpha);}
+    const labels=[];
+    function label(s,p,essential=false){const tw=ctx.measureText(s).width,h=16;for(const [dx,dy,right] of [[9,-11,false],[-9,-11,true],[9,13,false],[-9,13,true],[9,-29,false],[-9,31,true]]){let x=right?p.x+dx-tw:p.x+dx,y=p.y+dy;x=Math.max(8,Math.min(width-tw-8,x));const b={x,y:y-h/2,w:tw,h};if(labels.some(a=&gt;b.x&lt;a.x+a.w+4&amp;&amp;b.x+b.w+4&gt;a.x&amp;&amp;b.y&lt;a.y+a.h+4&amp;&amp;b.y+b.h+4&gt;a.y))continue;if(y&lt;48||y&gt;H-30)continue;text(s,x,y);labels.push(b);return;}if(essential){text(s,12,62);labels.push({x:12,y:54,w:tw,h});}}
+    path([[0,0,0],[1,0,0],[1,1,0],[0,1,0]]);ctx.fillStyle=color(&#x27;--background&#x27;);ctx.fill();
+    for(let i=0;i&lt;=10;i++){seg([i/10,0,0],[i/10,1,0],&#x27;--border&#x27;,.65);seg([0,i/10,0],[1,i/10,0],&#x27;--border&#x27;,.65);}
+    let selected=mode===&#x27;spline&#x27;?splinePoints.filter(p=&gt;p.local):mode===&#x27;trend&#x27;||mode===&#x27;scope&#x27;&amp;&amp;variant===&#x27;global&#x27;?pts:near(target);
+    if(step&gt;=2&amp;&amp;mode===&#x27;scope&#x27;&amp;&amp;variant===&#x27;local&#x27;)circle(target,Math.max(...selected.map(p=&gt;distance(p,target))));
+    if(step&gt;=2&amp;&amp;mode===&#x27;spline&#x27;){const k=.3,j=.7;[[[k,k,0],[j,k,0]],[[j,k,0],[j,j,0]],[[j,j,0],[k,j,0]],[[k,j,0],[k,k,0]]].forEach(a=&gt;seg(...a,&#x27;--viz-series-1&#x27;,.9));}
+    if(step&gt;=2&amp;&amp;!isDensity&amp;&amp;mode!==&#x27;spline&#x27;)selected.forEach(p=&gt;seg([p.x,p.y,0],[target.x,target.y,0],&#x27;--viz-series-1&#x27;,.4));
+    if(mode===&#x27;kriging&#x27;&amp;&amp;step===2)for(let i=0;i&lt;selected.length;i++)for(let j=i+1;j&lt;selected.length;j++)seg([selected[i].x,selected[i].y,0],[selected[j].x,selected[j].y,0],&#x27;--viz-series-1&#x27;,Math.exp(-distance(selected[i],selected[j])/5)*.8);
+    function circle(p,r){let prev=null;for(let i=0;i&lt;=100;i++){let t=i/100*Math.PI*2,x=p.x+r/20*Math.cos(t),y=p.y+r/12*Math.sin(t);if(x&lt;0||x&gt;1||y&lt;0||y&gt;1){prev=null;continue;}const v=[x,y,0];if(prev)seg(prev,v,&#x27;--muted-foreground&#x27;,.65);prev=v;}}
+    if(isDensity&amp;&amp;step&gt;=1)events.forEach(p=&gt;circle(p,radius*20));
+    const faces=[];
+    function face(v,z,side=false){faces.push({v,z,side,depth:v.reduce((s,p)=&gt;s+camera(...p).depth,0)/v.length});}
+    const active=isDensity?stageAmount([0,0,1,2,3,3]):0,unit=isDensity?stageAmount([1,1,1,1,1,1/cellArea]):1;
+    if(mode===&#x27;simple&#x27;&amp;&amp;active&gt;0){
+      for(let gy=0;gy&lt;NY;gy++)for(let gx=0;gx&lt;NX;gx++){
+        let i=gy*NX+gx,z=density.simple.reduce((s,a,j)=&gt;s+a[i]*Math.max(0,Math.min(1,active-j)),0)*unit;if(z&lt;1e-8)continue;
+        const x=gx/NX,xx=(gx+1)/NX,y=gy/NY,yy=(gy+1)/NY;
+        face([[x,y,z],[xx,y,z],[xx,yy,z],[x,yy,z]],z);
+        face([[x,y,0],[xx,y,0],[xx,y,z],[x,y,z]],z,true);face([[xx,y,0],[xx,yy,0],[xx,yy,z],[xx,y,z]],z,true);
+        face([[xx,yy,0],[x,yy,0],[x,yy,z],[xx,yy,z]],z,true);face([[x,yy,0],[x,y,0],[x,y,z],[x,yy,z]],z,true);
+      }
+    } else if(mode===&#x27;kernel&#x27;&amp;&amp;active&gt;0){
+      const vertices=Array.from({length:(NX+1)*(NY+1)},(_,i)=&gt;{
+        const x=i%(NX+1),y=Math.floor(i/(NX+1));let total=0,num=0;
+        for(const dx of [-1,0])for(const dy of [-1,0]){const gx=x+dx,gy=y+dy;if(gx&lt;0||gx&gt;=NX||gy&lt;0||gy&gt;=NY)continue;const idx=gy*NX+gx;total+=density.kernel.reduce((s,a,j)=&gt;s+a[idx]*Math.max(0,Math.min(1,active-j)),0);num++;}return total/num*unit;
+      });
+      for(let gy=0;gy&lt;NY;gy++)for(let gx=0;gx&lt;NX;gx++){const a=gy*(NX+1)+gx,z=[vertices[a],vertices[a+1],vertices[a+NX+2],vertices[a+NX+1]];if(Math.max(...z)&lt;1e-8)continue;face([[gx/NX,gy/NY,z[0]],[(gx+1)/NX,gy/NY,z[1]],[(gx+1)/NX,(gy+1)/NY,z[2]],[gx/NX,(gy+1)/NY,z[3]]],z.reduce((a,b)=&gt;a+b,0)/4);}
+    } else if(mesh){
+      const amount=mode===&#x27;trend&#x27;?stageAmount([0,.15,.45,.45,.75,1]):mode===&#x27;spline&#x27;?stageAmount([0,0,0,.8,1,1]):mode===&#x27;idw&#x27;||mode===&#x27;kriging&#x27;?stageAmount([0,0,0,0,1/(NX*NY),1]):stageAmount([0,0,0,1/(NX*NY),.5,1]);
+      const local=mode===&#x27;spline&#x27;,x0=local ? .3 : 0,y0=local ? .3 : 0,span=local ? .4 : 1;
+      for(let gy=0;gy&lt;NY;gy++)for(let gx=0;gx&lt;NX;gx++){
+        if(amount&lt;=0)continue;if(amount&lt;.005){if(gx!==Math.floor(target.x*NX)||gy!==Math.floor(target.y*NY))continue;}else if(gy*NX+gx&gt;=amount*NX*NY)continue;
+        const a=gy*(NX+1)+gx,z=[mesh[a],mesh[a+1],mesh[a+NX+2],mesh[a+NX+1]],x=x0+span*gx/NX,xx=x0+span*(gx+1)/NX,y=y0+span*gy/NY,yy=y0+span*(gy+1)/NY;
+        face([[x,y,z[0]],[xx,y,z[1]],[xx,yy,z[2]],[x,yy,z[3]]],z.reduce((a,b)=&gt;a+b,0)/4);
+      }
+    }
+    faces.sort((a,b)=&gt;a.depth-b.depth).forEach(f=&gt;{path(f.v);ctx.globalAlpha=1;ctx.fillStyle=color(&#x27;--background&#x27;);ctx.fill();ctx.globalAlpha=f.side ? .32 : .32+.42*Math.min(1,f.z/zMax);ctx.fillStyle=color(&#x27;--viz-series-1&#x27;);ctx.fill();ctx.globalAlpha=.18;ctx.strokeStyle=color(&#x27;--border&#x27;);ctx.lineWidth=.6;ctx.stroke();ctx.globalAlpha=1;});
+    seg([0,0,0],[1,0,0],&#x27;--muted-foreground&#x27;);seg([0,0,0],[0,1,0],&#x27;--muted-foreground&#x27;);seg([0,0,0],[0,0,zMax],&#x27;--muted-foreground&#x27;);
+    const topTitle=isDensity?(step===5?&#x27;竖直高度：密度（每 m²）&#x27;:&#x27;竖直高度：分摊数量&#x27;):mode===&#x27;scope&#x27;?&#x27;选点范围；高度为已知数值&#x27;:&#x27;竖直高度：变量数值&#x27;;text(topTitle,12,18);text(&#x27;水平位置：x、y&#x27;,12,39);
+    const targetReady=mode===&#x27;trend&#x27;?step&gt;=3:mode===&#x27;spline&#x27;||mode===&#x27;idw&#x27;||mode===&#x27;kriging&#x27;?step&gt;=4:step&gt;=3;
+    if(!isDensity&amp;&amp;step&gt;=1){let z=mode===&#x27;scope&#x27;||!targetReady?0:mode===&#x27;trend&#x27;?trendValue(target):mode===&#x27;spline&#x27;?splineSurface(target.x,target.y):estimate(target,kind),p=project(target.x,target.y,z);seg([target.x,target.y,0],[target.x,target.y,z],&#x27;--viz-series-2&#x27;);ctx.strokeStyle=color(&#x27;--viz-series-2&#x27;);ctx.lineWidth=2;ctx.beginPath();ctx.arc(p.x,p.y,7,0,Math.PI*2);ctx.stroke();label(targetReady&amp;&amp;mode!==&#x27;scope&#x27;?&#x27;P ≈ &#x27;+z.toFixed(1):&#x27;P（待估计）&#x27;,p,true);}
+    label(&#x27;x：20 m&#x27;,project(1,0,0));label(&#x27;y：12 m&#x27;,project(0,1,0));
+    for(const z of [0,zMax/2,zMax])label(String(Number(z.toFixed(2))),project(0,0,z));
+    const points=isDensity?events:mode===&#x27;spline&#x27;?splinePoints:pts;
+    points.map(p=&gt;({p,q:project(p.x,p.y,isDensity?0:p.z)})).sort((a,b)=&gt;a.q.depth-b.q.depth).forEach(({p,q})=&gt;{const used=isDensity?step&lt;2||events.indexOf(p)&lt;active:step&lt;2||selected.includes(p);if(!isDensity)seg([p.x,p.y,0],[p.x,p.y,p.z],&#x27;--muted-foreground&#x27;,.28);mark(p,q.x,q.y,&#x27;&#x27;,used);if(isDensity||used&amp;&amp;width&gt;430)label(p.id+(isDensity?&#x27; &#x27;+p.z:&#x27;&#x27;),q);});
+    if(isDensity&amp;&amp;step&gt;=2){let gx=Math.floor(target.x*NX),gy=Math.floor(target.y*NY),i=gy*NX+gx,x=(gx+.5)/NX,y=(gy+.5)/NY,z=density[mode].reduce((s,a,j)=&gt;s+a[i]*Math.max(0,Math.min(1,active-j)),0)*unit,p=project(x,y,z);seg([x,y,0],[x,y,z],&#x27;--viz-series-2&#x27;);ctx.strokeStyle=color(&#x27;--viz-series-2&#x27;);ctx.lineWidth=2;ctx.beginPath();ctx.arc(p.x,p.y,6,0,Math.PI*2);ctx.stroke();label(&#x27;选定格 &#x27;+z.toFixed(2),p,true);}
+    const captions={interpolation:&#x27;已知点 → 估计其他位置 → 栅格曲面&#x27;,scope:variant===&#x27;global&#x27;?&#x27;全部已知点共同参与&#x27;:&#x27;只选附近的已知点&#x27;,trend:variant===&#x27;high&#x27;?&#x27;高次趋势面：二次曲面示例&#x27;:&#x27;一次趋势面：空间斜平面&#x27;,spline:&#x27;局部范围内拟合曲面，再估计P&#x27;,idw:&#x27;近点权重大；测量点附近可有峰谷&#x27;,kriging:&#x27;空间相关模型 → 求权重 → 加权估计&#x27;,simple:&#x27;圆内等量分摊；重叠贡献相加&#x27;,kernel:&#x27;中心高、向外低；重叠贡献相加&#x27;};
+    text(captions[mode],12,H-17);
+  }
+  function drawTrend(){
+    const W=width,H=340,proj=(x,y,z)=&gt;[W*.5+(x-y)*W*.32,H*.74+(x+y-1)*54-(z-18)*3.0];
+    const reveal=stageAmount([0,.18,.5,.5,.8,1]);
+    if(reveal&gt;0)for(let y=0;y&lt;=16;y++){let prev=null;for(let x=0;x&lt;=16*reveal;x++){let p={x:x/16,y:y/16};let v=proj(p.x,p.y,trendValue(p));if(prev)line(...prev,...v,&#x27;--viz-series-1&#x27;,.65);prev=v;}}
+    if(reveal&gt;0)for(let x=0;x&lt;=16*reveal;x++){let prev=null;for(let y=0;y&lt;=16;y++){let p={x:x/16,y:y/16};let v=proj(p.x,p.y,trendValue(p));if(prev)line(...prev,...v,&#x27;--viz-series-1&#x27;,.65);prev=v;}}
+    pts.forEach(p=&gt;{let v=proj(p.x,p.y,p.z);mark(p,...v,&#x27;&#x27;);});
+    text(variant===&#x27;high&#x27;?&#x27;高次趋势面：二次曲面示例&#x27;:&#x27;一次趋势面：空间斜平面&#x27;,14,18);
+    text(&#x27;垂直方向：待估计变量的数值&#x27;,14,39);
+    if(step&gt;=3){let z=trendValue(target),a=proj(target.x,target.y,z),b=proj(target.x,target.y,18);line(...a,...b,&#x27;--viz-series-2&#x27;);ctx.fillStyle=color(&#x27;--viz-series-2&#x27;);ctx.beginPath();ctx.arc(...a,6,0,Math.PI*2);ctx.fill();text(&#x27;P ≈ &#x27;+z.toFixed(1),a[0]+10,a[1]-12);}
+    text(&#x27;全部点参与；不必穿过每个点&#x27;,14,H-16);
+  }
+  function drawSpline(){
+    const L=48,T=40,W=width-68,H=250,px=x=&gt;L+x*W,py=z=&gt;T+H-(z-15)/35*H;
+    line(L,T,L,T+H,&#x27;--border&#x27;);line(L,T+H,L+W,T+H,&#x27;--border&#x27;);text(&#x27;变量数值&#x27;,L,18);text(&#x27;沿截面的位置（m）&#x27;,L+W/2,322,&#x27;center&#x27;);
+    for(let z of [20,30,40,50]){text(String(z),L-10,py(z),&#x27;right&#x27;);line(L,py(z),L+W,py(z),&#x27;--border&#x27;,.4);}
+    for(let x of [0,.5,1])text(String(x*20),px(x),305,&#x27;center&#x27;);
+    if(step&gt;=2){ctx.fillStyle=color(&#x27;--viz-series-1&#x27;);ctx.globalAlpha=.06;ctx.fillRect(px(sx[1]),T,px(sx[5])-px(sx[1]),H);ctx.globalAlpha=1;}
+    const length=stageAmount([0,0,0,1,1,1]);
+    if(length&gt;0){ctx.strokeStyle=color(&#x27;--viz-series-1&#x27;);ctx.lineWidth=2;ctx.beginPath();for(let i=0;i&lt;=160*length;i++){let x=sx[1]+(sx[5]-sx[1])*i/160,y=splineFn(x);i?ctx.lineTo(px(x),py(y)):ctx.moveTo(px(x),py(y));}ctx.stroke();}
+    sx.forEach((x,i)=&gt;mark(null,px(x),py(sy[i]),String.fromCharCode(65+i),step&lt;2||i&gt;=1&amp;&amp;i&lt;=5));
+    if(step&gt;=1){line(px(.53),T,px(.53),T+H,&#x27;--viz-series-2&#x27;,.65);text(step&gt;=4?&#x27;P ≈ &#x27;+splineFn(.53).toFixed(1):&#x27;P&#x27;,px(.53)+8,T+12);if(step&gt;=4){ctx.fillStyle=color(&#x27;--viz-series-2&#x27;);ctx.beginPath();ctx.arc(px(.53),py(splineFn(.53)),6,0,Math.PI*2);ctx.fill();}}
+  }
+  function setupVariant(){let opts=mode===&#x27;scope&#x27;?[[&#x27;global&#x27;,&#x27;全局：全部已知点&#x27;],[&#x27;local&#x27;,&#x27;局部：附近已知点&#x27;]]:mode===&#x27;trend&#x27;?[[&#x27;linear&#x27;,&#x27;一次趋势面&#x27;],[&#x27;high&#x27;,&#x27;高次趋势面&#x27;]]:[];el(&#x27;variant-label&#x27;).hidden=!opts.length;el(&#x27;variant&#x27;).innerHTML=opts.map(([v,s])=&gt;&#x27;&lt;option value=&quot;&#x27;+v+&#x27;&quot;&gt;&#x27;+s+&#x27;&lt;/option&gt;&#x27;).join(&#x27;&#x27;);if(opts.length&amp;&amp;!opts.some(a=&gt;a[0]===variant))variant=opts[0][0];el(&#x27;variant&#x27;).value=variant;}
+  function info(){
+    el(&#x27;view&#x27;).value=view;el(&#x27;orbit&#x27;).hidden=view!==&#x27;3d&#x27;;canvas.dataset.view=view;el(&#x27;yaw&#x27;).value=yaw;el(&#x27;tilt&#x27;).value=tilt;el(&#x27;yaw-value&#x27;).textContent=Math.round(yaw)+&#x27;°&#x27;;el(&#x27;tilt-value&#x27;).textContent=Math.round(tilt)+&#x27;°&#x27;;
+    el(&#x27;mode&#x27;).value=mode;el(&#x27;count&#x27;).textContent=(step+1)+&#x27; / 6&#x27;;el(&#x27;stage&#x27;).textContent=stages[mode][step];el(&#x27;prev&#x27;).disabled=step===0;el(&#x27;next&#x27;).disabled=step===5;
+    el(&#x27;play&#x27;).textContent=playing?&#x27;暂停&#x27;:&#x27;播放全过程&#x27;;
+    el(&#x27;legend&#x27;).innerHTML=mode===&#x27;simple&#x27;||mode===&#x27;kernel&#x27;?&#x27;&lt;span&gt;&lt;i class=&quot;swatch&quot;&gt;&lt;/i&gt;观测点 / 分摊结果&lt;/span&gt;&lt;span&gt;&lt;i class=&quot;swatch neutral&quot;&gt;&lt;/i&gt;尚未参与的点&lt;/span&gt;&lt;span&gt;&lt;i class=&quot;swatch target&quot;&gt;&lt;/i&gt;选定栅格&lt;/span&gt;&#x27;:&#x27;&lt;span&gt;&lt;i class=&quot;swatch&quot;&gt;&lt;/i&gt;参与点 / 估计结果&lt;/span&gt;&lt;span&gt;&lt;i class=&quot;swatch neutral&quot;&gt;&lt;/i&gt;其他测量点&lt;/span&gt;&lt;span&gt;&lt;i class=&quot;swatch target&quot;&gt;&lt;/i&gt;待插值点P&lt;/span&gt;&#x27;;
+    const show=(mode===&#x27;idw&#x27;||mode===&#x27;kriging&#x27;)&amp;&amp;step&gt;=3;el(&#x27;weight-wrap&#x27;).hidden=!show;
+    if(show){const list=near(target),weights=mode===&#x27;kriging&#x27;?kriging(target,list):idw(target,list);el(&#x27;weights&#x27;).innerHTML=list.map((p,i)=&gt;&#x27;&lt;tr&gt;&lt;td&gt;&#x27;+p.id+&#x27;&lt;/td&gt;&lt;td&gt;&#x27;+p.z+&#x27;&lt;/td&gt;&lt;td&gt;&#x27;+distance(p,target).toFixed(2)+&#x27;&lt;/td&gt;&lt;td&gt;&#x27;+(weights[i]*100).toFixed(1)+&#x27;%&lt;/td&gt;&lt;td&gt;&#x27;+(weights[i]*p.z).toFixed(2)+&#x27;&lt;/td&gt;&lt;/tr&gt;&#x27;).join(&#x27;&#x27;)+&#x27;&lt;tr&gt;&lt;td&gt;合计&lt;/td&gt;&lt;td&gt;&lt;/td&gt;&lt;td&gt;&lt;/td&gt;&lt;td&gt;&#x27;+(weights.reduce((a,b)=&gt;a+b,0)*100).toFixed(1)+&#x27;%&lt;/td&gt;&lt;td&gt;&#x27;+estimate(target,mode).toFixed(2)+&#x27;&lt;/td&gt;&lt;/tr&gt;&#x27;;}
+    const densityVisible=(mode===&#x27;simple&#x27;||mode===&#x27;kernel&#x27;)&amp;&amp;step&gt;=2;el(&#x27;density-detail&#x27;).hidden=!densityVisible;
+    if(densityVisible){let idx=Math.floor(target.y*NY)*NX+Math.floor(target.x*NX),active=Math.min(3,step-1),values=density[mode].map((a,i)=&gt;i&lt;active?a[idx]:0),total=values.reduce((a,b)=&gt;a+b,0);el(&#x27;density-detail&#x27;).textContent=&#x27;选定格贡献：甲 &#x27;+values[0].toFixed(2)+&#x27;，乙 &#x27;+values[1].toFixed(2)+&#x27;，丙 &#x27;+values[2].toFixed(2)+&#x27;；合计 &#x27;+total.toFixed(2)+(step===5?&#x27;；面积 &#x27;+cellArea.toFixed(3)+&#x27; m²，密度 &#x27;+(total/cellArea).toFixed(2)+&#x27; /m²&#x27;:&#x27;&#x27;);}
+    const models={interpolation:&#x27;此示例用反距离加权逐格估计；空间插值还有其他方法。&#x27;,scope:&#x27;只比较选点范围；局部示例取距离P最近的5点，距离按水平位置计算。&#x27;,trend:&#x27;实际拟合全部9点；高次示例采用二次多项式。&#x27;,spline:&#x27;教学曲面：局部3×3测量点，沿两个位置方向拟合样条；仅在局部范围显示。&#x27;,idw:&#x27;教学计算采用距离倒数权重，取最近5点；距离按水平位置计算。&#x27;,kriging:&#x27;教学计算：普通克里金，指数空间相关模型，相关尺度5 m；权重由方程实际求解。&#x27;,simple:&#x27;统计量按覆盖格子均匀分摊；重叠台面变高；最后除以栅格面积。&#x27;,kernel:&#x27;教学核函数采用有限半径、中心高向外降低的形态；格内贡献归一化后求和，再除面积。&#x27;};
+    el(&#x27;model&#x27;).textContent=models[mode];canvas.setAttribute(&#x27;aria-label&#x27;,stages[mode][step]+&#x27;。&#x27;+models[mode]);
+  }
+  function stop(){playing=false;clearTimeout(timer);timer=null;el(&#x27;play&#x27;).textContent=&#x27;播放全过程&#x27;;}
+  function go(value){cancelAnimationFrame(raf);from=step;step=value;progress=0;info();save();const start=performance.now(),duration=matchMedia(&#x27;(prefers-reduced-motion: reduce)&#x27;).matches?0:650;function tick(t){progress=duration?Math.min(1,(t-start)/duration):1;draw();if(progress&lt;1)raf=requestAnimationFrame(tick);}raf=requestAnimationFrame(tick);}
+  function autoplay(){if(!playing)return;if(step===5){stop();return;}timer=setTimeout(()=&gt;{if(!playing)return;go(step+1);autoplay();},1800);}
+  el(&#x27;play&#x27;).addEventListener(&#x27;click&#x27;,()=&gt;{if(playing){stop();return;}if(step===5){step=0;from=0;progress=1;}playing=true;info();draw();autoplay();save();});
+  el(&#x27;prev&#x27;).addEventListener(&#x27;click&#x27;,()=&gt;{stop();go(Math.max(0,step-1));});el(&#x27;next&#x27;).addEventListener(&#x27;click&#x27;,()=&gt;{stop();go(Math.min(5,step+1));});
+  el(&#x27;mode&#x27;).addEventListener(&#x27;change&#x27;,()=&gt;{stop();mode=el(&#x27;mode&#x27;).value;step=0;from=0;progress=1;setupVariant();info();draw();save();});
+  el(&#x27;variant&#x27;).addEventListener(&#x27;change&#x27;,()=&gt;{variant=el(&#x27;variant&#x27;).value;info();draw();save();});
+  el(&#x27;view&#x27;).addEventListener(&#x27;change&#x27;,()=&gt;{view=el(&#x27;view&#x27;).value;info();draw();save();});
+  for(const name of [&#x27;yaw&#x27;,&#x27;tilt&#x27;]){el(name).addEventListener(&#x27;input&#x27;,()=&gt;{if(name===&#x27;yaw&#x27;)yaw=Number(el(name).value);else tilt=Number(el(name).value);el(name+&#x27;-value&#x27;).textContent=Math.round(name===&#x27;yaw&#x27;?yaw:tilt)+&#x27;°&#x27;;draw();});el(name).addEventListener(&#x27;change&#x27;,save);}
+  canvas.addEventListener(&#x27;pointerdown&#x27;,event=&gt;{if(view!==&#x27;3d&#x27;)return;drag={x:event.clientX,y:event.clientY,yaw,tilt};canvas.setPointerCapture(event.pointerId);canvas.classList.add(&#x27;is-dragging&#x27;);});
+  canvas.addEventListener(&#x27;pointermove&#x27;,event=&gt;{if(!drag)return;yaw=((drag.yaw+(event.clientX-drag.x)*.5+540)%360)-180;tilt=Math.max(15,Math.min(80,drag.tilt+(event.clientY-drag.y)*.25));el(&#x27;yaw&#x27;).value=yaw;el(&#x27;tilt&#x27;).value=tilt;el(&#x27;yaw-value&#x27;).textContent=Math.round(yaw)+&#x27;°&#x27;;el(&#x27;tilt-value&#x27;).textContent=Math.round(tilt)+&#x27;°&#x27;;draw();});
+  function endDrag(){if(!drag)return;drag=null;canvas.classList.remove(&#x27;is-dragging&#x27;);save();}
+  canvas.addEventListener(&#x27;pointerup&#x27;,endDrag);canvas.addEventListener(&#x27;pointercancel&#x27;,endDrag);
+  window.addEventListener(&#x27;openai:set_globals&#x27;,event=&gt;{const state=event.detail?.globals?.widgetState,s=state?.modelContent,c=state?.privateContent;if(!s||!valid.includes(s.mode))return;const incomingView=s.view===&#x27;flat&#x27;?&#x27;flat&#x27;:&#x27;3d&#x27;;if(s.mode===mode&amp;&amp;s.variant===variant&amp;&amp;s.step===step&amp;&amp;incomingView===view&amp;&amp;(!c||c.yaw===yaw&amp;&amp;c.tilt===tilt))return;stop();mode=s.mode;variant=s.variant;view=incomingView;if(Number.isFinite(c?.yaw))yaw=Math.max(-180,Math.min(180,c.yaw));if(Number.isFinite(c?.tilt))tilt=Math.max(15,Math.min(80,c.tilt));step=Math.max(0,Math.min(5,Number(s.step)||0));from=step;progress=1;setupVariant();info();draw();});
+  new ResizeObserver(entries=&gt;{width=Math.max(280,Math.floor(entries[0].contentRect.width));draw();}).observe(el(&#x27;frame&#x27;));
+  new MutationObserver(()=&gt;draw()).observe(document.documentElement,{attributes:true,attributeFilter:[&#x27;class&#x27;,&#x27;style&#x27;,&#x27;data-theme&#x27;]});
+  setupVariant();info();draw();
+})();
+&lt;/script&gt;
+
+&lt;script src=&quot;https://unpkg.com/@floating-ui/core@1.7.3/dist/floating-ui.core.umd.min.js&quot;&gt;&lt;/script&gt;
+&lt;script src=&quot;https://unpkg.com/@floating-ui/dom@1.7.4/dist/floating-ui.dom.umd.min.js&quot;&gt;&lt;/script&gt;
+&lt;script&gt;
+(() =&gt; {
+  if (window.FloatingUIDOM == null) {
+    return;
+  }
+  const { autoUpdate, computePosition, flip, offset, shift, size } =
+    window.FloatingUIDOM;
+  const tooltipPlacements = new Set([&quot;top&quot;, &quot;right&quot;, &quot;bottom&quot;, &quot;left&quot;]);
+  const tooltipId = `codex-visualization-tooltip-${
+    window.crypto?.randomUUID?.() ?? Date.now().toString(36)
+  }`;
+  const tooltipGap = 5;
+  const hoverDelay = 700;
+  const skipDelay = 300;
+  let activeTrigger = null;
+  let pendingTrigger = null;
+  let tooltip = null;
+  let openTimeout = null;
+  let autoUpdateCleanup = null;
+  let positionRequest = 0;
+  let skipDelayUntil = 0;
+  let lastPointerWasTouch = false;
+  let pinnedByTouch = false;
+
+  const getTrigger = (event) =&gt; {
+    for (const target of event.composedPath()) {
+      if (target?.nodeType === Node.ELEMENT_NODE) {
+        const trigger = target.closest(&quot;[data-tooltip]&quot;);
+        if (trigger) return trigger;
+      }
+    }
+    return null;
+  };
+  const containsTarget = (trigger, target) =&gt;
+    target?.nodeType != null &amp;&amp; trigger.contains(target);
+  const getContent = (trigger) =&gt;
+    trigger.getAttribute(&quot;data-tooltip&quot;)?.trim() ?? &quot;&quot;;
+  const getPlacement = (trigger) =&gt; {
+    const placement = trigger.getAttribute(&quot;data-tooltip-placement&quot;);
+    return tooltipPlacements.has(placement) ? placement : &quot;top&quot;;
+  };
+  const getTooltip = () =&gt; {
+    if (tooltip == null) {
+      tooltip = document.createElement(&quot;div&quot;);
+      tooltip.id = tooltipId;
+      tooltip.className = &quot;tooltip&quot;;
+      tooltip.setAttribute(&quot;role&quot;, &quot;tooltip&quot;);
+    }
+    return tooltip;
+  };
+  const setDescribedBy = (trigger, described) =&gt; {
+    const ids = new Set(
+      (trigger.getAttribute(&quot;aria-describedby&quot;) ?? &quot;&quot;)
+        .split(/\s+/)
+        .filter(Boolean),
+    );
+    if (described) {
+      ids.add(tooltipId);
+    } else {
+      ids.delete(tooltipId);
+    }
+    if (ids.size === 0) {
+      trigger.removeAttribute(&quot;aria-describedby&quot;);
+    } else {
+      trigger.setAttribute(&quot;aria-describedby&quot;, [...ids].join(&quot; &quot;));
+    }
+  };
+  const clearOpenTimeout = () =&gt; {
+    if (openTimeout != null) {
+      window.clearTimeout(openTimeout);
+      openTimeout = null;
+    }
+    pendingTrigger = null;
+  };
+  const closeTooltip = (activateSkipDelay = true) =&gt; {
+    clearOpenTimeout();
+    pinnedByTouch = false;
+    positionRequest += 1;
+    autoUpdateCleanup?.();
+    autoUpdateCleanup = null;
+    if (activeTrigger == null) {
+      return;
+    }
+    setDescribedBy(activeTrigger, false);
+    activeTrigger = null;
+    tooltip?.remove();
+    if (activateSkipDelay) {
+      skipDelayUntil = Date.now() + skipDelay;
+    }
+  };
+  const updatePosition = (trigger, floating) =&gt; {
+    const request = ++positionRequest;
+    void computePosition(trigger, floating, {
+      middleware: [
+        offset(tooltipGap),
+        flip({ padding: tooltipGap }),
+        shift({ padding: tooltipGap }),
+        size({
+          padding: tooltipGap,
+          apply({ availableHeight, availableWidth, elements }) {
+            elements.floating.style.setProperty(
+              &quot;--tooltip-available-width&quot;,
+              `${Math.max(0, availableWidth)}px`,
+            );
+            elements.floating.style.setProperty(
+              &quot;--tooltip-available-height&quot;,
+              `${Math.max(0, availableHeight)}px`,
+            );
+          },
+        }),
+      ],
+      placement: getPlacement(trigger),
+      strategy: &quot;fixed&quot;,
+    })
+      .then(({ x, y }) =&gt; {
+        if (activeTrigger !== trigger || request !== positionRequest) {
+          return;
+        }
+        const scale = window.devicePixelRatio || 1;
+        floating.style.transform = `translate(${Math.round(x * scale) / scale}px, ${Math.round(y * scale) / scale}px)`;
+        floating.style.visibility = &quot;visible&quot;;
+      })
+      .catch(() =&gt; {
+        if (activeTrigger === trigger &amp;&amp; request === positionRequest) {
+          closeTooltip(false);
+        }
+      });
+  };
+  const openTooltip = (trigger) =&gt; {
+    const content = getContent(trigger);
+    if (!trigger.isConnected || content.length === 0) {
+      return;
+    }
+    clearOpenTimeout();
+    if (activeTrigger === trigger) {
+      return;
+    }
+    closeTooltip();
+    const floating = getTooltip();
+    floating.textContent = content;
+    floating.style.visibility = &quot;hidden&quot;;
+    floating.style.transform = &quot;translate(0, 0)&quot;;
+    document.body.appendChild(floating);
+    activeTrigger = trigger;
+    setDescribedBy(trigger, true);
+    autoUpdateCleanup = autoUpdate(trigger, floating, () =&gt; {
+      updatePosition(trigger, floating);
+    });
+  };
+  const requestOpen = (trigger, immediate = false) =&gt; {
+    if (
+      getContent(trigger).length === 0 ||
+      activeTrigger === trigger ||
+      pendingTrigger === trigger
+    ) {
+      return;
+    }
+    clearOpenTimeout();
+    pendingTrigger = trigger;
+    const delay =
+      immediate || activeTrigger != null || Date.now() &lt; skipDelayUntil
+        ? 0
+        : hoverDelay;
+    if (delay === 0) {
+      openTooltip(trigger);
+      return;
+    }
+    openTimeout = window.setTimeout(() =&gt; {
+      openTimeout = null;
+      pendingTrigger = null;
+      openTooltip(trigger);
+    }, delay);
+  };
+  const handlePointerOpen = (event) =&gt; {
+    if (event.pointerType === &quot;touch&quot;) {
+      return;
+    }
+    const trigger = getTrigger(event);
+    if (trigger == null || containsTarget(trigger, event.relatedTarget)) {
+      return;
+    }
+    requestOpen(trigger);
+  };
+  const handlePointer = (event) =&gt; {
+    lastPointerWasTouch =
+      event.type === &quot;pointerdown&quot; &amp;&amp; event.pointerType === &quot;touch&quot;;
+  };
+  const handleTouchClick = (event) =&gt; {
+    const isTouch = event.pointerType === &quot;touch&quot; || lastPointerWasTouch;
+    lastPointerWasTouch = false;
+    if (!isTouch || event.detail === 0) {
+      return;
+    }
+    const trigger = getTrigger(event);
+    if (
+      trigger == null ||
+      !trigger.isConnected ||
+      getContent(trigger).length === 0 ||
+      (pinnedByTouch &amp;&amp; activeTrigger === trigger)
+    ) {
+      if (pinnedByTouch) {
+        closeTooltip();
+      }
+      return;
+    }
+    openTooltip(trigger);
+    pinnedByTouch = activeTrigger === trigger;
+    window.setTimeout(() =&gt; {
+      if (activeTrigger === trigger &amp;&amp; !trigger.isConnected) {
+        closeTooltip(false);
+      }
+    }, 0);
+  };
+  const handleLeave = (event) =&gt; {
+    if (pinnedByTouch) {
+      return;
+    }
+    const trigger = getTrigger(event);
+    if (trigger == null || containsTarget(trigger, event.relatedTarget)) {
+      return;
+    }
+    if (activeTrigger === trigger || pendingTrigger === trigger) {
+      closeTooltip();
+    }
+  };
+  const handleFocusIn = (event) =&gt; {
+    const trigger = getTrigger(event);
+    if (trigger?.matches(&quot;:focus-visible&quot;)) {
+      requestOpen(trigger, true);
+    }
+  };
+  const handleKeyDown = (event) =&gt; {
+    if (event.key === &quot;Escape&quot;) {
+      closeTooltip();
+    }
+  };
+  const handleContextMenu = (event) =&gt; {
+    lastPointerWasTouch = false;
+    const trigger = getTrigger(event);
+    if (activeTrigger === trigger || pendingTrigger === trigger) {
+      closeTooltip();
+    }
+  };
+  const handlers = {
+    pointerover: handlePointerOpen,
+    pointerdown: handlePointer,
+    pointercancel: handlePointer,
+    click: handleTouchClick,
+    pointerout: handleLeave,
+    focusin: handleFocusIn,
+    focusout: handleLeave,
+    keydown: handleKeyDown,
+    contextmenu: handleContextMenu,
+  };
+  const roots = new Map();
+  const handledEvents = new WeakSet();
+  const handleEvent = (event) =&gt; {
+    if (handledEvents.has(event)) return;
+    handledEvents.add(event);
+    handlers[event.type](event);
+  };
+  const discoverRoots = (node) =&gt; {
+    if (node.shadowRoot) listen(node.shadowRoot);
+    for (const element of node.querySelectorAll(&quot;*&quot;)) {
+      if (element.shadowRoot) listen(element.shadowRoot);
+    }
+  };
+  const listen = (root) =&gt; {
+    if (roots.has(root)) return;
+    for (const type of Object.keys(handlers)) root.addEventListener(type, handleEvent);
+    const observer = new window.MutationObserver((records) =&gt; {
+      for (const { addedNodes } of records) {
+        for (const node of addedNodes) {
+          if (node.nodeType === Node.ELEMENT_NODE) discoverRoots(node);
+        }
+      }
+      for (const [root, cleanup] of roots) {
+        if (root.host &amp;&amp; !root.host.isConnected) {
+          cleanup();
+          roots.delete(root);
+        }
+      }
+      if (activeTrigger &amp;&amp; !activeTrigger.isConnected) closeTooltip(false);
+    });
+    observer.observe(root, { childList: true, subtree: true });
+    roots.set(root, () =&gt; {
+      observer.disconnect();
+      for (const type of Object.keys(handlers)) root.removeEventListener(type, handleEvent);
+    });
+    discoverRoots(root);
+  };
+  const destroy = () =&gt; {
+    closeTooltip(false);
+    lastPointerWasTouch = false;
+    for (const cleanup of roots.values()) cleanup();
+    roots.clear();
+    tooltip = null;
+  };
+
+  // Events between children of one shadow root never reach the document.
+  listen(document);
+  window.addEventListener(&quot;pagehide&quot;, destroy, { once: true });
+})();
+&lt;/script&gt;
+&lt;script id=&quot;codex-visualization-tabs&quot;&gt;
+(() =&gt; {
+  const selector = &#x27;.nav[role=&quot;tablist&quot;] [role=&quot;tab&quot;]&#x27;;
+  const disabled = &#x27;:disabled,[aria-disabled=&quot;true&quot;]&#x27;;
+  const selectTab = (selected) =&gt; {
+    const panelId = selected.getAttribute(&quot;aria-controls&quot;);
+    for (const tab of selected.closest(&#x27;[role=&quot;tablist&quot;]&#x27;).querySelectorAll(&#x27;[role=&quot;tab&quot;]&#x27;)) {
+      const active = tab === selected;
+      tab.classList.toggle(&quot;active&quot;, active);
+      tab.setAttribute(&quot;aria-selected&quot;, String(active));
+      const id = tab.getAttribute(&quot;aria-controls&quot;);
+      const panel = id &amp;&amp; document.getElementById(id);
+      if (panel != null) {
+        panel.hidden = id !== panelId;
+        if (!panel.hidden &amp;&amp; selected.id) {
+          panel.setAttribute(&quot;aria-labelledby&quot;, selected.id);
+        }
+      }
+    }
+  };
+  const interact = (event) =&gt; {
+    const tab = event.target?.closest?.(selector);
+    if (event.defaultPrevented || tab == null || tab.matches(disabled)) {
+      return;
+    }
+    if (event.type === &quot;click&quot;) {
+      selectTab(tab);
+      return;
+    }
+    const tabs = Array.from(
+      tab.closest(&#x27;[role=&quot;tablist&quot;]&#x27;).querySelectorAll(&#x27;[role=&quot;tab&quot;]&#x27;),
+    ).filter((candidate) =&gt; !candidate.matches(disabled));
+    const current = tabs.indexOf(tab);
+    let next;
+    if (event.key === &quot;ArrowRight&quot; || event.key === &quot;ArrowDown&quot;) {
+      next = (current + 1) % tabs.length;
+    } else if (event.key === &quot;ArrowLeft&quot; || event.key === &quot;ArrowUp&quot;) {
+      next = (current + tabs.length - 1) % tabs.length;
+    } else if (event.key === &quot;Home&quot;) {
+      next = 0;
+    } else if (event.key === &quot;End&quot;) {
+      next = tabs.length - 1;
+    } else {
+      return;
+    }
+    event.preventDefault();
+    tabs[next].focus();
+    selectTab(tabs[next]);
+  };
+
+  for (const list of document.querySelectorAll(&#x27;.nav[role=&quot;tablist&quot;]&#x27;)) {
+    const selected =
+      list.querySelector(&#x27;[role=&quot;tab&quot;][aria-selected=&quot;true&quot;]&#x27;) ??
+      list.querySelector(&#x27;[role=&quot;tab&quot;].active&#x27;) ??
+      list.querySelector(&#x27;[role=&quot;tab&quot;]&#x27;);
+    if (selected != null) {
+      selectTab(selected);
+    }
+  }
+  document.addEventListener(&quot;click&quot;, interact);
+  document.addEventListener(&quot;keydown&quot;, interact);
+  window.addEventListener(&quot;pagehide&quot;, () =&gt; {
+    document.removeEventListener(&quot;click&quot;, interact);
+    document.removeEventListener(&quot;keydown&quot;, interact);
+  }, { once: true });
+})();
+&lt;/script&gt;
+&lt;script id=&quot;codex-visualization-carousel&quot;&gt;
+  (() =&gt; {
+    for (const root of document.querySelectorAll(&quot;.viz-carousel&quot;)) {
+      const panels = Array.from(
+        root.querySelectorAll(&quot;:scope &gt; [data-variant]&quot;),
+      );
+      if (panels.length === 0) {
+        continue;
+      }
+      root.setAttribute(&quot;role&quot;, &quot;group&quot;);
+      panels.forEach((panel, index) =&gt; {
+        panel.hidden = index !== 0;
+        panel.setAttribute(&quot;role&quot;, &quot;group&quot;);
+        if (!panel.hasAttribute(&quot;aria-label&quot;)) {
+          panel.setAttribute(&quot;aria-label&quot;, panel.dataset.variant);
+        }
+      });
+      root.dataset.activeVariant = panels[0].dataset.variant;
+      if (panels.length === 1) {
+        continue;
+      }
+
+      const controls = document.createElement(&quot;div&quot;);
+      controls.className = &quot;viz-carousel-controls&quot;;
+      // Portable copy of the settings dropdown&#x27;s legacy glyph; no 14px icon-package preset matches it.
+      // https://github.com/openai/openai/blob/master/codex/codex-apps/webview/src/icons/chevron.svg
+      controls.innerHTML = `
+      &lt;button type=&quot;button&quot; class=&quot;viz-carousel-previous cursor-interaction&quot;&gt;&lt;i data-lucide=&quot;chevron-left&quot; aria-hidden=&quot;true&quot;&gt;&lt;/i&gt;&lt;/button&gt;
+      &lt;details class=&quot;viz-carousel-picker&quot;&gt;
+        &lt;summary class=&quot;cursor-interaction&quot;&gt;
+          &lt;span class=&quot;viz-carousel-count tabular-nums&quot;&gt;&lt;/span&gt;
+          &lt;span class=&quot;viz-carousel-name&quot;&gt;&lt;/span&gt;
+          &lt;svg class=&quot;viz-carousel-caret&quot; width=&quot;14&quot; height=&quot;14&quot; viewBox=&quot;0 0 20 21&quot; fill=&quot;none&quot; aria-hidden=&quot;true&quot; focusable=&quot;false&quot;&gt;
+            &lt;path d=&quot;M15.2793 7.71101C15.539 7.45131 15.961 7.45131 16.2207 7.71101C16.4804 7.97071 16.4804 8.39272 16.2207 8.65242L10.4707 14.4024C10.211 14.6621 9.78902 14.6621 9.52932 14.4024L3.77932 8.65242L3.69436 8.54792C3.52385 8.28979 3.55205 7.93828 3.77932 7.71101C4.00659 7.48374 4.3581 7.45554 4.61623 7.62605L4.72073 7.71101L10 12.9903L15.2793 7.71101Z&quot; fill=&quot;currentColor&quot; stroke=&quot;currentColor&quot; stroke-width=&quot;0.6&quot; /&gt;
+          &lt;/svg&gt;
+        &lt;/summary&gt;
+        &lt;div class=&quot;viz-carousel-options&quot;&gt;&lt;/div&gt;
+      &lt;/details&gt;
+      &lt;button type=&quot;button&quot; class=&quot;viz-carousel-next cursor-interaction&quot;&gt;&lt;i data-lucide=&quot;chevron-right&quot; aria-hidden=&quot;true&quot;&gt;&lt;/i&gt;&lt;/button&gt;`;
+      const previous = controls.querySelector(&quot;.viz-carousel-previous&quot;);
+      const next = controls.querySelector(&quot;.viz-carousel-next&quot;);
+      const picker = controls.querySelector(&quot;.viz-carousel-picker&quot;);
+      const summary = picker.querySelector(&quot;summary&quot;);
+      const count = controls.querySelector(&quot;.viz-carousel-count&quot;);
+      const name = controls.querySelector(&quot;.viz-carousel-name&quot;);
+      const options = controls.querySelector(&quot;.viz-carousel-options&quot;);
+      const status = document.createElement(&quot;span&quot;);
+      status.className = &quot;sr-only&quot;;
+      status.setAttribute(&quot;role&quot;, &quot;status&quot;);
+      status.setAttribute(&quot;aria-live&quot;, &quot;polite&quot;);
+      status.setAttribute(&quot;aria-atomic&quot;, &quot;true&quot;);
+      previous.setAttribute(
+        &quot;aria-label&quot;,
+        root.dataset.previousLabel ?? &quot;Previous variant&quot;,
+      );
+      next.setAttribute(&quot;aria-label&quot;, root.dataset.nextLabel ?? &quot;Next variant&quot;);
+
+      let active = 0;
+      let mousePointerId = null;
+      let summaryPointerHandled = false;
+      summary.addEventListener(&quot;pointerdown&quot;, (event) =&gt; {
+        summaryPointerHandled =
+          event.pointerType === &quot;mouse&quot; &amp;&amp; event.button === 0 &amp;&amp; !event.ctrlKey;
+        if (!summaryPointerHandled) {
+          return;
+        }
+        event.preventDefault();
+        summary.focus({ preventScroll: true });
+        picker.open = !picker.open;
+        mousePointerId = picker.open ? event.pointerId : null;
+      });
+      summary.addEventListener(&quot;click&quot;, (event) =&gt; {
+        if (summaryPointerHandled &amp;&amp; event.detail &gt; 0) {
+          event.preventDefault();
+        }
+      });
+      const choices = panels.map((panel, index) =&gt; {
+        const choice = document.createElement(&quot;button&quot;);
+        choice.type = &quot;button&quot;;
+        choice.className = &quot;cursor-interaction&quot;;
+        choice.textContent = panel.dataset.variant;
+        choice.addEventListener(&quot;click&quot;, () =&gt; {
+          select(index);
+          summary.focus();
+        });
+        choice.addEventListener(&quot;pointerup&quot;, (event) =&gt; {
+          if (
+            picker.open &amp;&amp;
+            event.pointerType === &quot;mouse&quot; &amp;&amp;
+            event.button === 0 &amp;&amp;
+            event.pointerId === mousePointerId
+          ) {
+            choice.click();
+          }
+        });
+        options.appendChild(choice);
+        return choice;
+      });
+      const select = (index) =&gt; {
+        const changed = active !== index;
+        active = index;
+        panels.forEach((panel, position) =&gt; {
+          panel.hidden = position !== active;
+          choices[position].setAttribute(
+            &quot;aria-current&quot;,
+            String(position === active),
+          );
+        });
+        root.dataset.activeVariant = panels[active].dataset.variant;
+        count.textContent = `${active + 1} / ${panels.length}`;
+        name.textContent = panels[active].dataset.variant;
+        picker.open = false;
+        mousePointerId = null;
+        if (changed) {
+          status.textContent = `${count.textContent}: ${name.textContent}`;
+        }
+      };
+      previous.addEventListener(&quot;click&quot;, () =&gt;
+        select((active + panels.length - 1) % panels.length),
+      );
+      next.addEventListener(&quot;click&quot;, () =&gt;
+        select((active + 1) % panels.length),
+      );
+      picker.addEventListener(&quot;keydown&quot;, (event) =&gt; {
+        if (event.key === &quot;Escape&quot; &amp;&amp; picker.open) {
+          event.preventDefault();
+          picker.open = false;
+          mousePointerId = null;
+          summary.focus();
+          return;
+        }
+        if (event.altKey || event.ctrlKey || event.metaKey) {
+          return;
+        }
+        const index = choices.indexOf(document.activeElement);
+        let nextIndex;
+        if (event.key === &quot;ArrowDown&quot;) {
+          nextIndex = index &lt; 0 ? active : (index + 1) % choices.length;
+        } else if (event.key === &quot;ArrowUp&quot;) {
+          nextIndex = index &lt; 0 ? active : (index + choices.length - 1) % choices.length;
+        } else if (picker.open &amp;&amp; event.key === &quot;Home&quot;) {
+          nextIndex = 0;
+        } else if (picker.open &amp;&amp; event.key === &quot;End&quot;) {
+          nextIndex = choices.length - 1;
+        } else {
+          return;
+        }
+        event.preventDefault();
+        picker.open = true;
+        choices[nextIndex].focus();
+      });
+      picker.addEventListener(&quot;focusout&quot;, (event) =&gt; {
+        if (!picker.contains(event.relatedTarget)) {
+          picker.open = false;
+          mousePointerId = null;
+        }
+      });
+      const dismiss = (event) =&gt; {
+        if (!summary.contains(event.target)) {
+          mousePointerId = null;
+        }
+        if (!picker.contains(event.target)) {
+          picker.open = false;
+        }
+      };
+      const endPointerSelection = () =&gt; {
+        mousePointerId = null;
+      };
+      const sizePicker = () =&gt; {
+        root.style.setProperty(
+          &quot;--viz-carousel-picker-height&quot;,
+          `${picker.open ? options.offsetHeight : 0}px`,
+        );
+      };
+      picker.addEventListener(&quot;toggle&quot;, sizePicker);
+      window.addEventListener(&quot;resize&quot;, sizePicker);
+      document.addEventListener(&quot;pointerdown&quot;, dismiss);
+      document.addEventListener(&quot;pointerup&quot;, endPointerSelection);
+      document.addEventListener(&quot;pointercancel&quot;, endPointerSelection);
+      window.addEventListener(&quot;blur&quot;, endPointerSelection);
+      window.addEventListener(
+        &quot;pagehide&quot;,
+        () =&gt; {
+          document.removeEventListener(&quot;pointerdown&quot;, dismiss);
+          document.removeEventListener(&quot;pointerup&quot;, endPointerSelection);
+          document.removeEventListener(&quot;pointercancel&quot;, endPointerSelection);
+          window.removeEventListener(&quot;blur&quot;, endPointerSelection);
+          window.removeEventListener(&quot;resize&quot;, sizePicker);
+        },
+        { once: true },
+      );
+      root.append(controls, status);
+      select(0);
+    }
+  })();
+&lt;/script&gt;
+&lt;script id=&quot;codex-visualization-lucide&quot; async src=&quot;https://unpkg.com/lucide@1.17.0/dist/umd/lucide.js&quot;&gt;&lt;/script&gt;
+&lt;script&gt;
+(() =&gt; {
+  const initialize = () =&gt; {
+    globalThis.lucide?.createIcons({ attrs: { width: 16, height: 16 } });
+  };
+  if (globalThis.lucide != null) {
+    initialize();
+    return;
+  }
+  document
+    .getElementById(&quot;codex-visualization-lucide&quot;)
+    ?.addEventListener(&quot;load&quot;, initialize, { once: true });
+})();
+&lt;/script&gt;
+
+&lt;/body&gt;
+&lt;/html&gt;
+"></iframe>
+<script>(() => {
+  const frame = document.getElementById("codex-visualization");
+  if (!(frame instanceof HTMLIFrameElement)) {
+    return;
+  }
+  let viewportHeight = globalThis.innerHeight;
+  const storageKey = `codex:visualization-widget-state-v2:${JSON.stringify([
+    globalThis.location.pathname,
+    globalThis.location.search,
+  ])}`;
+  const parseState = (serializedState) => {
+    if (
+      typeof serializedState !== "string" ||
+      new TextEncoder().encode(serializedState).length > 16 * 1024
+    ) {
+      throw new TypeError(
+        "Widget state must be a JSON object of at most 16 KiB",
+      );
+    }
+    /** @type {unknown} */
+    const state = JSON.parse(serializedState);
+    if (
+      state == null ||
+      typeof state !== "object" ||
+      Array.isArray(state) ||
+      ("imageIds" in state &&
+        (!Array.isArray(state.imageIds) || state.imageIds.length > 0))
+    ) {
+      throw new TypeError("Widget state must be a JSON object");
+    }
+    const storedState = { modelContent: null, privateContent: null, ...state };
+    const canonicalState = JSON.stringify(
+      storedState,
+      (_key, /** @type {unknown} */ value) => {
+        if (typeof value === "number" && !Number.isFinite(value)) {
+          throw new TypeError("Widget state must contain finite numbers");
+        }
+        return value;
+      },
+    );
+    if (new TextEncoder().encode(canonicalState).length > 16 * 1024) {
+      throw new TypeError(
+        "Widget state must be a JSON object of at most 16 KiB",
+      );
+    }
+    return storedState;
+  };
+  let storage = null;
+  let state = null;
+  try {
+    const localStorage = globalThis.localStorage;
+    const probeKey = `${storageKey}:probe`;
+    localStorage.setItem(probeKey, "1");
+    localStorage.removeItem(probeKey);
+    storage = localStorage;
+    const savedState = storage.getItem(storageKey);
+    if (savedState != null) {
+      try {
+        state = parseState(savedState);
+      } catch {
+        // Invalid saved state does not disable future writes.
+      }
+    }
+  } catch {
+    storage = null;
+  }
+  const initialGlobals = {
+    widgetState: state,
+    statePersistence: storage == null ? "none" : "local",
+  };
+
+  const channel = new MessageChannel();
+  channel.port1.addEventListener("message", (event) => {
+    const data = event.data;
+    if (typeof data !== "object" || data == null) {
+      return;
+    }
+    if (data.type === "widget-state-write") {
+      if (!Number.isSafeInteger(data.id) || data.id <= 0) {
+        return;
+      }
+      let ok = false;
+      try {
+        if (storage != null) {
+          const state = parseState(data.state);
+          storage.setItem(storageKey, JSON.stringify(state));
+          ok = true;
+        }
+      } catch {
+        // Storage denial, quota limits, and invalid state return a failed receipt.
+      }
+      channel.port1.postMessage({
+        type: "widget-state-result",
+        id: data.id,
+        ok,
+      });
+      return;
+    }
+    if (data.type === "height") {
+      const height = data.height;
+      if (
+        typeof height === "number" &&
+        Number.isFinite(height) &&
+        height >= 0 &&
+        height <= 10_000
+      ) {
+        frame.style.height = Math.ceil(height) + "px";
+      }
+      return;
+    }
+    if (data.type === "scroll-to") {
+      const top = data.top;
+      if (
+        typeof top === "number" &&
+        Number.isFinite(top) &&
+        top >= 0 &&
+        globalThis.navigator.userActivation?.isActive === true
+      ) {
+        globalThis.scrollTo({
+          top: Math.ceil(
+            globalThis.scrollY + frame.getBoundingClientRect().top + top,
+          ),
+        });
+      }
+      return;
+    }
+    if (data.type === "open-external") {
+      const rawHref = data.href;
+      if (typeof rawHref !== "string") {
+        return;
+      }
+      let href;
+      try {
+        const url = new URL(rawHref, document.baseURI);
+        if (url.protocol !== "https:") {
+          return;
+        }
+        href = url.href;
+      } catch {
+        return;
+      }
+      if (globalThis.navigator.userActivation?.isActive === true) {
+        const anchor = document.createElement("a");
+        anchor.href = href;
+        anchor.rel = "noopener noreferrer";
+        anchor.target = "_blank";
+        document.body.appendChild(anchor);
+        anchor.click();
+        anchor.remove();
+      }
+      return;
+    }
+    if (data.type === "follow-up") {
+      const prompt = data.prompt;
+      if (
+        typeof prompt !== "string" ||
+        globalThis.navigator.userActivation?.isActive !== true
+      ) {
+        return;
+      }
+      const title = data.title;
+      globalThis.prompt(typeof title === "string" ? title : prompt, prompt);
+    }
+  });
+  channel.port1.start();
+  const srcdoc = frame.dataset.srcdoc;
+  if (srcdoc == null) {
+    return;
+  }
+  globalThis.addEventListener("resize", () => {
+    const height = Number.parseFloat(frame.style.height);
+    if (!Number.isFinite(height) || height <= viewportHeight) {
+      frame.style.removeProperty("height");
+    }
+    viewportHeight = globalThis.innerHeight;
+    channel.port1.postMessage({ type: "measure" });
+  });
+  frame.addEventListener(
+    "load",
+    () => {
+      frame.contentWindow?.postMessage(
+        { type: "codex-visualization-initialize" },
+        "*",
+        [channel.port2],
+      );
+    },
+    { once: true },
+  );
+  // Match the trusted bootstrap element, not the same text in an authored title.
+  frame.srcdoc = srcdoc.replace(
+    '<script type="application/json" id="codex-visualization-widget-state">__CODEX_VISUALIZATION_WIDGET_STATE__<\/script>',
+    () =>
+      '<script type="application/json" id="codex-visualization-widget-state">' +
+      JSON.stringify(initialGlobals).replaceAll("<", "\\u003c") +
+      "<\/script>",
+  );
+  delete frame.dataset.srcdoc;
+})();
+</script>
+</body>
+</html>
